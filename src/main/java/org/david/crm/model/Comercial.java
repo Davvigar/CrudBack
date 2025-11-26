@@ -31,6 +31,11 @@ public class Comercial implements Serializable {
     @Column(name = "rol", nullable = false, length = 20)
     private Rol rol = Rol.comercial;
     
+    // Locking optimista: previene Lost Updates
+    @Version
+    @Column(name = "version")
+    private Integer version;
+    
     public enum Rol {
         pseudoadmin, comercial
     }
@@ -92,6 +97,14 @@ public class Comercial implements Serializable {
     
     public void setRol(Rol rol) {
         this.rol = rol;
+    }
+    
+    public Integer getVersion() {
+        return version;
+    }
+    
+    public void setVersion(Integer version) {
+        this.version = version;
     }
 }
 

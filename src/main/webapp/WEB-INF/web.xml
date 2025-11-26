@@ -7,14 +7,5 @@
     
     <display-name>CRM Backend</display-name>
     
-    <filter>
-        <filter-name>CorsFilter</filter-name>
-        <filter-class>org.david.crm.filter.CorsFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>CorsFilter</filter-name>
-        <url-pattern>/api/*</url-pattern>
-    </filter-mapping>
-    
 </web-app>
 

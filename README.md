@@ -189,7 +189,7 @@ src/
 │   │   └── org/david/crm/
 │   │       ├── config/          # Configuración (EntityManagerProducer)
 │   │       ├── controller/      # Servlets (endpoints REST)
-│   │       ├── filter/          # Filtros (CORS)
+│   │       ├── filter/          # Filtros (rate limiting, estadísticas)
 │   │       ├── model/           # Entidades JPA
 │   │       ├── repository/      # Capa de repositorios
 │   │       ├── service/         # Capa de servicios
@@ -217,7 +217,42 @@ src/
 - Los repositorios utilizan `Optional` para manejar valores nulos de forma segura
 - La aplicación utiliza CDI para la inyección de dependencias
 - Se implementa programación funcional con Streams y lambdas donde es apropiado
-- El filtro CORS permite peticiones desde cualquier origen (ajustar en producción)
+
+## Funcionalidades de Concurrencia y Paralelismo
+
+Este proyecto implementa técnicas avanzadas de concurrencia y paralelismo:
+
+### Características Implementadas
+
+- **ExecutorService**: Generación de informes asíncrona con pool de hilos
+- **CompletableFuture**: Procesamiento paralelo de múltiples informes
+- **Threads dedicados**: 
+  - `ClienteReportThread` (extends Thread) para informes
+  - `AuditLogRunnable` (implements Runnable) para auditoría
+  - Hilo con clase anónima en `RateLimiter` para limpiar ventanas
+  - Hilo con lambda en `ApiStatistics` para exportar estadísticas
+- **Recursos Atómicos**: AtomicInteger y AtomicLong para contadores thread-safe
+- **Rate Limiting**: Control de 100 peticiones por minuto por cliente
+- **Locking Optimista**: Prevención de Lost Updates con `@Version` en entidades
+- **Logging Asíncrono**: Escritura de logs en segundo plano
+- **Sincronización**: Uso de `synchronized` y `ReentrantLock` para secciones críticas
+
+### Endpoints de Concurrencia
+
+- `GET /api/informes/clientes` - Genera informe de clientes en segundo plano
+- `GET /api/informes/facturas` - Genera informe de facturas en segundo plano
+- `GET /api/informes/completo` - Genera informe completo en paralelo
+- `GET /api/estadisticas` - Obtiene estadísticas de la API (recursos atómicos)
+- `DELETE /api/estadisticas` - Resetea las estadísticas
+- `POST /api/estadisticas?file=archivo.txt` - Exporta estadísticas usando un hilo creado con lambda
+
+### Documentación Técnica
+
+Ver `DOCUMENTACION_CONCURRENCIA.md` para documentación detallada sobre:
+- Diseño de concurrencia
+- Diagramas de flujo
+- Problemas resueltos (Lost Updates, Race Conditions, Rate Limiting)
+- Impacto en el rendimiento
 
 ## Solución de Problemas
 

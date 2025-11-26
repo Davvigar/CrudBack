@@ -8,7 +8,7 @@ import jakarta.persistence.Persistence;
 public class EntityManagerProducer {
     
     private static final String PERSISTENCE_UNIT_NAME = "crmPU";
-    private static EntityManagerFactory emf;
+    private static final EntityManagerFactory emf;
     private static final ThreadLocal<EntityManager> emThreadLocal = new ThreadLocal<>();
     
     static {

@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 @Entity
 @Table(name = "clientes")
@@ -48,6 +49,11 @@ public class Cliente implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY) // varios clientes pueden estar asociados a un comercial (el comecial solo carga cuando se carga un cliente)
     @JoinColumn(name = "comercial_id")
     private Comercial comercial;
+    
+    // Locking optimista: previene Lost Updates cuando dos usuarios actualizan simultáneamente
+    @Version
+    @Column(name = "version")
+    private Integer version;
     
     public Cliente() {
     }
@@ -130,6 +136,14 @@ public class Cliente implements Serializable {
     
     public void setComercial(Comercial comercial) {
         this.comercial = comercial;
+    }
+    
+    public Integer getVersion() {
+        return version;
+    }
+    
+    public void setVersion(Integer version) {
+        this.version = version;
     }
 }
 

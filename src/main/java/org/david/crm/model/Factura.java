@@ -1,9 +1,20 @@
 package org.david.crm.model;
 
-import jakarta.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 @Entity
 @Table(name = "facturas")
@@ -40,6 +51,11 @@ public class Factura implements Serializable {
     
     @Column(name = "total", precision = 12, scale = 2)
     private BigDecimal total;
+    
+    // Locking optimista: previene Lost Updates
+    @Version
+    @Column(name = "version")
+    private Integer version;
     
     public enum Estado {
         pendiente, pagada
@@ -125,6 +141,14 @@ public class Factura implements Serializable {
     
     public void setTotal(BigDecimal total) {
         this.total = total;
+    }
+    
+    public Integer getVersion() {
+        return version;
+    }
+    
+    public void setVersion(Integer version) {
+        this.version = version;
     }
 }
 
