@@ -46,9 +46,8 @@ public class AsyncReportService {
         }, 0, 24, TimeUnit.HOURS);
     }
     
-    /**
-     * Elimina informes con más de 7 días de antigüedad.
-     */
+    // Elimina informes con más de 7 días de antigüedad.
+
     private void limpiarInformesAntiguos() {
         try {
             Path directorioActual = Paths.get(".");

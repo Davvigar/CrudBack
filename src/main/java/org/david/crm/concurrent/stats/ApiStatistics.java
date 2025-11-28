@@ -86,9 +86,7 @@ public class ApiStatistics {
         totalResponseTime.set(0);
     }
     
-    /**
-     * Exporta las estadísticas en un hilo creado con lambda.
-     */
+
     public void exportSummaryAsync(String fileName) {
         Thread exportThread = new Thread(() -> {
             StatisticsSummary summary = getSummary();

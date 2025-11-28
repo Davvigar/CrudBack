@@ -66,7 +66,7 @@ public class RateLimiter {
 
         private volatile long windowStart = System.currentTimeMillis();
         
-        // Lock para sincronizar el reset de la ventana
+
         private final ReentrantLock lock = new ReentrantLock();
 
 

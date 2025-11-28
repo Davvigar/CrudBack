@@ -42,8 +42,7 @@ public class ClienteService {
     
     public Cliente save(Cliente cliente) {
         if (cliente.getComercial() != null && cliente.getComercial().getComercialId() != null) {
-            // Usar getReference para obtener solo una referencia proxy sin cargar toda la entidad
-            // Esto evita problemas con version cuando solo necesitamos la referencia
+
             try {
                 Comercial comercialRef = em.getReference(Comercial.class, cliente.getComercial().getComercialId());
                 cliente.setComercial(comercialRef);

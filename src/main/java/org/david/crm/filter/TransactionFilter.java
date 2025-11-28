@@ -66,15 +66,14 @@ public class TransactionFilter implements Filter {
                 throw new ServletException("Error en transacción: " + e.getMessage(), e);
             }
         } finally {
-            // NO cerrar el EntityManager aquí - se cerrará en removeEntityManager
-            // Solo limpiar el ThreadLocal
+
             EntityManagerProducer.removeEntityManager();
         }
     }
     
     @Override
     public void destroy() {
-        // Limpieza si es necesaria
+    // Limpieza si es necesaria}
     }
 }
 
