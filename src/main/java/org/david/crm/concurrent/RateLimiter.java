@@ -73,7 +73,7 @@ public class RateLimiter {
         public boolean incrementAndCheck() {
             long now = System.currentTimeMillis();
             
-            // Si ha pasado más de un minuto, resetear la ventana
+           
             if (now - windowStart > WINDOW_MS) {
                 lock.lock();
                 try {

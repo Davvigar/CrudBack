@@ -8,10 +8,7 @@ import java.util.List;
 import org.david.crm.model.Cliente;
 import org.david.crm.repository.ClienteRepository;
 
-/**
- * Hilo dedicado (extends Thread) para generar informes de clientes.
- * Representa una funcionalidad distinta del resto de hilos del sistema.
- */
+
 public class ClienteReportThread extends Thread {
     
     private final ClienteRepository clienteRepository;

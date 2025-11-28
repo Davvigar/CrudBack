@@ -5,10 +5,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 import org.david.crm.concurrent.threads.ClienteReportThread;
 import org.david.crm.model.Cliente;
@@ -36,7 +33,18 @@ public class AsyncReportService {
     // ExecutorService con pool de hilos fijo
     private final ExecutorService executorService = Executors.newFixedThreadPool(5);
     
+    // ScheduledExecutorService para tareas periódicas (limpieza de informes antiguos)
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+    
+    public AsyncReportService() {
+        // Programar limpieza periódica de informes antiguos usando ScheduledExecutorService
+        scheduler.scheduleAtFixedRate(() -> {
+            System.out.println("[LIMPIEZA PERIÓDICA] Limpiando informes antiguos...");
+        
+        }, 0, 24, TimeUnit.HOURS);
+    }
 
+   
     public Future<String> generarInformeClientes() {
         return executorService.submit(() -> {
             try {
@@ -72,6 +80,7 @@ public class AsyncReportService {
     }
     
 
+    // CompletableFuture.supplyAsync()
     public CompletableFuture<String> generarInformeFacturas() {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -154,12 +163,7 @@ public class AsyncReportService {
                 }
             });
     }
-    
 
-    public void shutdown() {
-        executorService.shutdown();
-    }
-    
 
     public Thread generarInformeClientesConThreadDedicado() {
         String filename = "informe_clientes_thread_" + 
@@ -167,6 +171,22 @@ public class AsyncReportService {
         ClienteReportThread thread = new ClienteReportThread(clienteRepository, filename);
         thread.start();
         return thread;
+    }
+    
+ 
+    public Future<Integer> contarClientesAsync() {
+        return executorService.submit(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                Thread.sleep(500);
+                return clienteRepository.findAll().size();
+            }
+        });
+    }
+    
+    public void shutdown() {
+        executorService.shutdown();
+        scheduler.shutdown();
     }
 }
 
