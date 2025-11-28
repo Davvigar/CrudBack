@@ -2,6 +2,7 @@ package org.david.crm.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.OptimisticLockException;
 import org.david.crm.model.Cliente;
 import org.david.crm.model.Comercial;
@@ -19,6 +20,9 @@ public class ClienteService {
     
     @Inject
     private ComercialRepository comercialRepository;
+    
+    @Inject
+    private EntityManager em;
     
     public List<Cliente> findAll() {
         return clienteRepository.findAll();
@@ -38,17 +42,20 @@ public class ClienteService {
     
     public Cliente save(Cliente cliente) {
         if (cliente.getComercial() != null && cliente.getComercial().getComercialId() != null) {
-            Optional<Comercial> comercialOpt = comercialRepository.findById(
-                cliente.getComercial().getComercialId());
-            comercialOpt.ifPresent(cliente::setComercial);
+            // Usar getReference para obtener solo una referencia proxy sin cargar toda la entidad
+            // Esto evita problemas con version cuando solo necesitamos la referencia
+            try {
+                Comercial comercialRef = em.getReference(Comercial.class, cliente.getComercial().getComercialId());
+                cliente.setComercial(comercialRef);
+            } catch (Exception e) {
+                // Si no existe, eliminar la referencia
+                cliente.setComercial(null);
+            }
         }
         return clienteRepository.save(cliente);
     }
     
-    /**
-     * Actualiza un cliente con locking optimista
-     * Si hay un conflicto de versión (Lost Update), lanza OptimisticLockException
-     */
+
     public Optional<Cliente> update(Integer id, Cliente cliente) {
         try {
             return clienteRepository.findById(id)
@@ -58,9 +65,12 @@ public class ClienteService {
                     cliente.setVersion(existing.getVersion());
                     
                     if (cliente.getComercial() != null && cliente.getComercial().getComercialId() != null) {
-                        Optional<Comercial> comercialOpt = comercialRepository.findById(
-                            cliente.getComercial().getComercialId());
-                        comercialOpt.ifPresent(cliente::setComercial);
+                        try {
+                            Comercial comercialRef = em.getReference(Comercial.class, cliente.getComercial().getComercialId());
+                            cliente.setComercial(comercialRef);
+                        } catch (Exception e) {
+                            cliente.setComercial(null);
+                        }
                     }
                     return clienteRepository.save(cliente);
                 });

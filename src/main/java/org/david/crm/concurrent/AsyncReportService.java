@@ -20,10 +20,7 @@ import org.david.crm.repository.FacturaRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-/**
- * Servicio de generación de informes asíncrona usando ExecutorService
- * Demuestra el uso de ExecutorService y diferentes formas de crear hilos
- */
+
 @ApplicationScoped
 public class AsyncReportService {
     
@@ -39,10 +36,7 @@ public class AsyncReportService {
     // ExecutorService con pool de hilos fijo
     private final ExecutorService executorService = Executors.newFixedThreadPool(5);
     
-    /**
-     * Genera un informe de clientes de forma asíncrona usando ExecutorService
-     * Retorna un Future para poder monitorear el estado del hilo
-     */
+
     public Future<String> generarInformeClientes() {
         return executorService.submit(() -> {
             try {
@@ -77,10 +71,7 @@ public class AsyncReportService {
         });
     }
     
-        /**
-         * Genera un informe de facturas usando CompletableFuture
-         * Demuestra programación asíncrona moderna
-         */
+
     public CompletableFuture<String> generarInformeFacturas() {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -111,10 +102,7 @@ public class AsyncReportService {
         }, executorService);
     }
     
-    /**
-     * Genera un informe completo usando múltiples hilos
-     * Demuestra paralelismo
-     */
+
     public CompletableFuture<String> generarInformeCompleto() {
         CompletableFuture<String> informeClientes = CompletableFuture.supplyAsync(() -> {
             try {
@@ -167,17 +155,12 @@ public class AsyncReportService {
             });
     }
     
-    /**
-     * Cierra el ExecutorService (debe llamarse al destruir el bean)
-     */
+
     public void shutdown() {
         executorService.shutdown();
     }
     
-    /**
-     * Genera un informe usando un hilo dedicado (extends Thread).
-     * Útil para demostrar otra forma de crear hilos para una funcionalidad distinta.
-     */
+
     public Thread generarInformeClientesConThreadDedicado() {
         String filename = "informe_clientes_thread_" + 
             LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".txt";

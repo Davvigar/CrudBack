@@ -10,10 +10,7 @@ import org.david.crm.concurrent.stats.ApiStatistics;
 
 import java.io.IOException;
 
-/**
- * Servlet para obtener estadísticas de la API
- * Demuestra el uso de recursos atómicos
- */
+
 @WebServlet("/api/estadisticas")
 @ApplicationScoped
 public class StatisticsServlet extends BaseServlet {

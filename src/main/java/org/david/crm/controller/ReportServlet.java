@@ -12,10 +12,7 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
-/**
- * Servlet para generar informes de forma asíncrona
- * Demuestra el uso de ExecutorService y CompletableFuture
- */
+
 @WebServlet("/api/informes/*")
 @ApplicationScoped
 public class ReportServlet extends BaseServlet {
@@ -61,6 +58,7 @@ public class ReportServlet extends BaseServlet {
         Future<String> future = reportService.generarInformeClientes();
         
         // Enviar respuesta inmediata (el informe se genera en segundo plano)
+
         resp.setStatus(HttpServletResponse.SC_ACCEPTED);
         resp.setContentType("application/json");
         resp.getWriter().write("{\"message\": \"Generando informe de clientes en segundo plano...\", " +
@@ -84,12 +82,12 @@ public class ReportServlet extends BaseServlet {
                 sendErrorResponse(resp, "Error: " + ex.getMessage(), 
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             } catch (IOException e) {
-                // Error al enviar error
+
             }
             return null;
         });
         
-        // Respuesta inmediata
+
         resp.setStatus(HttpServletResponse.SC_ACCEPTED);
         resp.setContentType("application/json");
         resp.getWriter().write("{\"message\": \"Generando informe de facturas en segundo plano...\", " +
@@ -99,7 +97,7 @@ public class ReportServlet extends BaseServlet {
     private void generarInformeCompleto(HttpServletResponse resp) throws IOException {
         CompletableFuture<String> future = reportService.generarInformeCompleto();
         
-        // Respuesta inmediata
+
         resp.setStatus(HttpServletResponse.SC_ACCEPTED);
         resp.setContentType("application/json");
         resp.getWriter().write("{\"message\": \"Generando informe completo en segundo plano...\", " +

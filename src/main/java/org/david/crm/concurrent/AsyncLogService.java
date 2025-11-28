@@ -50,10 +50,7 @@ public class AsyncLogService {
         logExecutor.submit(new LogWriterRunnable(message, this));
     }
     
-    /**
-     * Forma dedicada usando Thread + implements Runnable.
-     * Crea un hilo separado para tareas de auditoría.
-     */
+
     public void logWithRunnableThread(String message) {
         Thread thread = new Thread(
             new AuditLogRunnable(logFile, message),

@@ -7,5 +7,24 @@
     
     <display-name>CRM Backend</display-name>
     
+    <!-- Weld CDI Listener -->
+    <listener>
+        <listener-class>org.jboss.weld.environment.servlet.Listener</listener-class>
+    </listener>
+    
+    <!-- Definir el filtro de transacciones -->
+    <filter>
+        <filter-name>TransactionFilter</filter-name>
+        <filter-class>org.david.crm.filter.TransactionFilter</filter-class>
+    </filter>
+    
+    <!-- Configurar orden de filtros: TransactionFilter debe ejecutarse primero -->
+    <filter-mapping>
+        <filter-name>TransactionFilter</filter-name>
+        <url-pattern>/api/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+        <dispatcher>FORWARD</dispatcher>
+    </filter-mapping>
+    
 </web-app>
 
