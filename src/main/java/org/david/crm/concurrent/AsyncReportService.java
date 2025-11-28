@@ -1,7 +1,10 @@
 package org.david.crm.concurrent;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -39,9 +42,38 @@ public class AsyncReportService {
     public AsyncReportService() {
         // Programar limpieza periódica de informes antiguos usando ScheduledExecutorService
         scheduler.scheduleAtFixedRate(() -> {
-            System.out.println("[LIMPIEZA PERIÓDICA] Limpiando informes antiguos...");
-        
+            limpiarInformesAntiguos();
         }, 0, 24, TimeUnit.HOURS);
+    }
+    
+    /**
+     * Elimina informes con más de 7 días de antigüedad.
+     */
+    private void limpiarInformesAntiguos() {
+        try {
+            Path directorioActual = Paths.get(".");
+            long tiempoLimite = System.currentTimeMillis() - (7L * 24 * 60 * 60 * 1000); // 7 días
+            
+            int archivosEliminados = 0;
+            
+            File[] archivos = directorioActual.toFile().listFiles((dir, name) -> 
+                name.startsWith("informe_") && name.endsWith(".txt")
+            );
+            
+            if (archivos != null) {
+                for (File archivo : archivos) {
+                    if (archivo.lastModified() < tiempoLimite) {
+                        if (archivo.delete()) {
+                            archivosEliminados++;
+                        }
+                    }
+                }
+            }
+            
+            System.out.println("[LIMPIEZA PERIÓDICA] Eliminados " + archivosEliminados + " informes antiguos.");
+        } catch (Exception e) {
+            System.err.println("Error al limpiar informes antiguos: " + e.getMessage());
+        }
     }
 
    
