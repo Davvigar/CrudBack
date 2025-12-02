@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.OptimisticLockException;
+import org.david.crm.concurrent.AsyncLogService;
 import org.david.crm.model.Cliente;
 import org.david.crm.model.Comercial;
 import org.david.crm.repository.ClienteRepository;
@@ -23,6 +24,9 @@ public class ClienteService {
     
     @Inject
     private EntityManager em;
+    
+    @Inject
+    private AsyncLogService logService;
     
     public List<Cliente> findAll() {
         return clienteRepository.findAll();
@@ -48,10 +52,13 @@ public class ClienteService {
                 cliente.setComercial(comercialRef);
             } catch (Exception e) {
                 // Si no existe, eliminar la referencia
+                logService.logAsync("ClienteService.save() - Comercial ID " + cliente.getComercial().getComercialId() + " no encontrado, estableciendo a null");
                 cliente.setComercial(null);
             }
         }
-        return clienteRepository.save(cliente);
+        Cliente saved = clienteRepository.save(cliente);
+        logService.logAsync("ClienteService.save() - Cliente guardado: ID=" + saved.getClienteId() + ", Username=" + saved.getUsername());
+        return saved;
     }
     
 
@@ -71,10 +78,13 @@ public class ClienteService {
                             cliente.setComercial(null);
                         }
                     }
-                    return clienteRepository.save(cliente);
+                    Cliente updated = clienteRepository.save(cliente);
+                    logService.logAsync("ClienteService.update() - Cliente actualizado: ID=" + updated.getClienteId());
+                    return updated;
                 });
         } catch (OptimisticLockException e) {
             // Lost Update detectado: otro usuario modificó el registro
+            logService.logCriticoAsync("ClienteService.update() - OptimisticLockException para Cliente ID=" + id + ": El cliente fue modificado por otro usuario");
             throw new RuntimeException("El cliente fue modificado por otro usuario. Por favor, recarga los datos.", e);
         }
     }
@@ -82,8 +92,10 @@ public class ClienteService {
     public boolean deleteById(Integer id) {
         if (clienteRepository.existsById(id)) {
             clienteRepository.deleteById(id);
+            logService.logAsync("ClienteService.deleteById() - Cliente eliminado: ID=" + id);
             return true;
         }
+        logService.logAsync("ClienteService.deleteById() - Cliente no encontrado para eliminar: ID=" + id);
         return false;
     }
 }

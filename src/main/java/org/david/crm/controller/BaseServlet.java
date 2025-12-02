@@ -8,7 +8,7 @@ import org.david.crm.util.JsonUtil;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletResponse;
 
-public abstract class BaseServlet extends HttpServlet {
+public abstract class BaseServlet extends HttpServlet { // base para todos los servlets
     
     protected void sendJsonResponse(HttpServletResponse resp, Object data, int status) throws IOException { // respueseta Json y serialaza
         resp.setContentType("application/json");

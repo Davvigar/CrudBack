@@ -1,11 +1,11 @@
 package org.david.crm.util;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-import java.io.IOException;
-
-public class JsonUtil {
+public class JsonUtil { // utilidad para convertir objetos a JSON y viceversa
     
     private static final ObjectMapper objectMapper = new ObjectMapper();
     

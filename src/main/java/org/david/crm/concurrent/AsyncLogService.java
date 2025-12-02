@@ -15,7 +15,7 @@ import jakarta.inject.Inject;
 
 
 @ApplicationScoped
-public class AsyncLogService {
+public class AsyncLogService { // logging asincrono con executor service
     
     @Inject
     private ApiStatistics apiStatistics;
@@ -27,7 +27,7 @@ public class AsyncLogService {
     private final AtomicInteger logCount = new AtomicInteger(0);
     
     
-    public void logAsync(String message) {
+    public void logAsync(String message) { // log normal con executor service y actualiza las estadisticas
         logExecutor.submit(() -> {
             writeLog(message);
             apiStatistics.incrementLogsWritten();
@@ -35,7 +35,7 @@ public class AsyncLogService {
     }
     
  
-    public void logCriticoAsync(String message) {
+    public void logCriticoAsync(String message) { // log critico con hilo creado con clase anónima y actualiza las estadisticas
         Thread criticalThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -47,7 +47,7 @@ public class AsyncLogService {
         criticalThread.start();
     }
     
-    synchronized void writeLog(String message) {
+    synchronized void writeLog(String message) { // escribe el log en el archivo
         try (FileWriter writer = new FileWriter(logFile, true)) {
             String logEntry = String.format("[%s] %s\n",
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),

@@ -1,0 +1,14 @@
+hilo deamon : Un daemon (o demonio) es un hilo en segundo plano que no impide la terminación de la JVM.no bloquean la salida de la aplicación: si todos los hilos no-daemon terminan, la JVM finaliza aunque queden daemon ejecutándose.
+Se detienen automáticamente cuando la JVM termina.
+Útiles para tareas de soporte (limpieza, monitoreo, logging).
+
+
+compleatblefuture : completableFuture.supplyAsync(): crea un CompletableFuture que ejecuta la lambda en paralelo.
+Tres tareas paralelas: procesan clientes, comerciales y facturas al mismo tiempo (en lugar de secuencialmente).
+CompletableFuture.allOf(): espera a que todas las tareas terminen.
+.thenApply(): cuando todas terminan, combina los resultados en un informe único.
+
+windowStart :  almacena el instante en milisegundos (timestamp) en que comenzó la ventana de tiempo actual para contar peticiones. Ventana 1: 10:00:00 - 10:01:00 (máximo 100 peticiones)
+volatil : Visibilidad: un hilo ve inmediatamente los cambios escritos por otro hilo
+Sin reordenación: evita optimizaciones del compilador que reordenen accesos a la variable
+Sin volatile, un hilo podría no ver el cambio de windowStart realizado por otro:

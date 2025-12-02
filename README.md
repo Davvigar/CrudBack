@@ -1,6 +1,6 @@
 # CRM Backend - API REST con Jakarta EE
 
-Backend del sistema CRM desarrollado con Jakarta EE, JPA y MySQL. Proporciona una API REST para gestionar comerciales, clientes, secciones, productos y facturas.
+Backend del sistema CRM para multinacional de formación profesional desarrollado con Jakarta EE, JPA y MySQL. Proporciona una API REST para gestionar comerciales, clientes (estudiantes), secciones (áreas de formación), productos (cursos de grados superiores) y facturas (matrículas).
 
 ## Requisitos Previos
 
@@ -12,11 +12,32 @@ Backend del sistema CRM desarrollado con Jakarta EE, JPA y MySQL. Proporciona un
 ## Configuración de la Base de Datos
 
 1. Asegúrate de que MySQL esté ejecutándose
-2. Crea la base de datos `crudProject` si no existe:
-   ```sql
-   CREATE DATABASE IF NOT EXISTS crudProject;
+2. Ejecuta el script SQL para crear la base de datos con datos de ejemplo:
+   ```bash
+   mysql -u root -p < database_setup.sql
    ```
-3. La base de datos ya debe contener las tablas según el esquema proporcionado
+   
+   O desde MySQL Workbench o cualquier cliente MySQL, ejecuta el contenido del archivo `database_setup.sql`
+
+### Script SQL de Inicialización
+
+El archivo `database_setup.sql` contiene:
+- Creación de la base de datos `crudProject`
+- Creación de todas las tablas con sus relaciones:
+  - `secciones` (4 áreas de formación: Salud, Emergencias, Business, Tech)
+  - `comerciales` (5 comerciales, incluyendo 1 administrador)
+  - `clientes` (10 estudiantes potenciales)
+  - `productos` (23 cursos de grados superiores distribuidos en las áreas)
+  - `facturas` (15 matrículas de ejemplo con estados variados)
+- Datos de ejemplo medianamente completos para probar la aplicación
+
+**Cursos incluidos:**
+- **Salud**: Enfermería, Farmacia, Técnico de Rayos, Dietética, Higiene Bucodental, Anatomía Patológica, Laboratorio Clínico
+- **Emergencias**: Emergencias Sanitarias, Protección Civil, Coordinación de Emergencias, Prevención de Riesgos
+- **Business**: Administración y Finanzas, Comercio Internacional, Marketing, Gestión de Ventas, Asistencia a la Dirección, Transporte y Logística
+- **Tech**: DAM, ASIR, DAW, Ciberseguridad, IA y Big Data, Animación 3D y Videojuegos
+
+**Nota:** El script elimina las tablas existentes si ya existen, así que úsalo con precaución en producción.
 
 ## Configuración del Proyecto
 
@@ -228,7 +249,6 @@ Este proyecto implementa técnicas avanzadas de concurrencia y paralelismo:
 - **CompletableFuture**: Procesamiento paralelo de múltiples informes
 - **Threads dedicados**: 
   - `ClienteReportThread` (extends Thread) para informes
-  - `AuditLogRunnable` (implements Runnable) para auditoría
   - Hilo con clase anónima en `RateLimiter` para limpiar ventanas
   - Hilo con lambda en `ApiStatistics` para exportar estadísticas
 - **Recursos Atómicos**: AtomicInteger y AtomicLong para contadores thread-safe

@@ -1,5 +1,9 @@
 package org.david.crm.filter;
 
+import java.io.IOException;
+
+import org.david.crm.config.EntityManagerProducer;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 import jakarta.servlet.Filter;
@@ -8,11 +12,8 @@ import jakarta.servlet.FilterConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import org.david.crm.config.EntityManagerProducer;
 
-import java.io.IOException;
-
-public class TransactionFilter implements Filter {
+public class TransactionFilter implements Filter { // filtra todas las peticiones http y maneja las transacciones de la base de datos
     
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -38,10 +39,9 @@ public class TransactionFilter implements Filter {
             transaction.begin();
             transactionActive = true;
             
-            // Continuar con la cadena de filtros (servlets usarán el EM del ThreadLocal)
             chain.doFilter(request, response);
             
-            // Si llegamos aquí sin excepción, hacer commit
+          
             if (transaction.isActive() && transactionActive) {
                 transaction.commit();
                 committed = true;
@@ -57,7 +57,7 @@ public class TransactionFilter implements Filter {
                     // Ignorar errores de rollback
                 }
             }
-            // Re-lanzar la excepción como ServletException
+           
             if (e instanceof ServletException) {
                 throw (ServletException) e;
             } else if (e instanceof IOException) {
@@ -73,7 +73,7 @@ public class TransactionFilter implements Filter {
     
     @Override
     public void destroy() {
-    // Limpieza si es necesaria}
+    // Limpieza si es necesaria
     }
 }
 

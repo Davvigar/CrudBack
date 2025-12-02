@@ -18,7 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @WebFilter("/api/*")
 @ApplicationScoped
-public class RateLimitFilter implements Filter {
+public class RateLimitFilter implements Filter {  // aplica la logica de rate limiting a todas las peticiones http 
     
     @Inject
     private RateLimiter rateLimiter;

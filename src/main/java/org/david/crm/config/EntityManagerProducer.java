@@ -5,10 +5,10 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
-public class EntityManagerProducer {
+public class EntityManagerProducer { // produce un entity manager por hilo
     
     private static final String PERSISTENCE_UNIT_NAME = "crmPU";
-    private static final EntityManagerFactory emf;
+    private static final EntityManagerFactory emf; // singleton XD compartido por toda la aplicacion
     private static final ThreadLocal<EntityManager> emThreadLocal = new ThreadLocal<>();
     
     static {
@@ -16,17 +16,17 @@ public class EntityManagerProducer {
     }
     
     @Produces
-    public EntityManager createEntityManager() {
+    public EntityManager createEntityManager() { 
 
         
-        EntityManager em = emThreadLocal.get();
+        EntityManager em = emThreadLocal.get(); 
         if (em != null && em.isOpen()) {
-            return em;
+            return em; // si el entity manager ya existe lo devuelve
         }
 
         em = emf.createEntityManager();
         emThreadLocal.set(em);
-        return em;
+        return em; // si no existelo crea y lo devuelve
     }
     
 

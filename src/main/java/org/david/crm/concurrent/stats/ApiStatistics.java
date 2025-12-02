@@ -10,7 +10,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 
 @ApplicationScoped
-public class ApiStatistics {
+public class ApiStatistics { // clase que encapsula las estadisticas de la api y las expota a un archivo
     
     // contaadires atomicos 
     
@@ -86,7 +86,7 @@ public class ApiStatistics {
         totalResponseTime.set(0);
     }
     
-
+ // excportar estadisiticas a un archivo con hilo creado con lambda 
     public void exportSummaryAsync(String fileName) {
         Thread exportThread = new Thread(() -> {
             StatisticsSummary summary = getSummary();
@@ -102,11 +102,11 @@ public class ApiStatistics {
                 System.err.println("No se pudo exportar las estadísticas: " + e.getMessage());
             }
         }, "StatsExportThread");
-        exportThread.setDaemon(true);
+        exportThread.setDaemon(true); // no bloquea el apagado de la aplicacion y se detinen cuaando la JVM se cierra
         exportThread.start();
     }
     
-    
+    // encapsula las stats como un snapshot en un momnento dado
     public StatisticsSummary getSummary() {
         return new StatisticsSummary(
             totalRequests.get(),

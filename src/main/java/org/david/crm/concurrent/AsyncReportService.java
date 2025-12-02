@@ -8,7 +8,13 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.david.crm.concurrent.threads.ClienteReportThread;
 import org.david.crm.model.Cliente;
@@ -22,7 +28,7 @@ import jakarta.inject.Inject;
 
 
 @ApplicationScoped
-public class AsyncReportService {
+public class AsyncReportService { // genera informes asincronos con executor service y scheduled executor service sin bloquear el hilo principal
     
     @Inject
     private ClienteRepository clienteRepository;
@@ -33,10 +39,10 @@ public class AsyncReportService {
     @Inject
     private FacturaRepository facturaRepository;
     
-    // ExecutorService con pool de hilos fijo
+    
     private final ExecutorService executorService = Executors.newFixedThreadPool(5);
     
-    // ScheduledExecutorService para tareas periódicas (limpieza de informes antiguos)
+    // ScheduledExecutorService para tareas periódicas limpieza de informes antiguos
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     
     public AsyncReportService() {
@@ -79,7 +85,7 @@ public class AsyncReportService {
     public Future<String> generarInformeClientes() {
         return executorService.submit(() -> {
             try {
-                Thread.sleep(2000); // Simula procesamiento pesado
+                Thread.sleep(2000); // Simula mucho tiempo de procesamiento
                 List<Cliente> clientes = clienteRepository.findAll();
                 
                 String filename = "informe_clientes_" + 
@@ -112,7 +118,7 @@ public class AsyncReportService {
     
 
     // CompletableFuture.supplyAsync()
-    public CompletableFuture<String> generarInformeFacturas() {
+    public CompletableFuture<String> generarInformeFacturas() { // va a corres en paralelo tres tareas diferentes y espera a que todas se completen
         return CompletableFuture.supplyAsync(() -> {
             try {
                 Thread.sleep(1500);
@@ -144,7 +150,7 @@ public class AsyncReportService {
     
 
     public CompletableFuture<String> generarInformeCompleto() {
-        CompletableFuture<String> informeClientes = CompletableFuture.supplyAsync(() -> {
+        CompletableFuture<String> informeClientes = CompletableFuture.supplyAsync(() -> { // informe de clientes con complatable future
             try {
                 Thread.sleep(1000);
                 return "Clientes procesados: " + clienteRepository.findAll().size();
@@ -154,7 +160,7 @@ public class AsyncReportService {
             }
         }, executorService);
         
-        CompletableFuture<String> informeComerciales = CompletableFuture.supplyAsync(() -> {
+        CompletableFuture<String> informeComerciales = CompletableFuture.supplyAsync(() -> { // informe de comerciales con complatable future
             try {
                 Thread.sleep(1000);
                 return "Comerciales procesados: " + comercialRepository.findAll().size();
@@ -164,7 +170,7 @@ public class AsyncReportService {
             }
         }, executorService);
         
-        CompletableFuture<String> informeFacturas = CompletableFuture.supplyAsync(() -> {
+        CompletableFuture<String> informeFacturas = CompletableFuture.supplyAsync(() -> { // ubfirne de factyras con complatable future
             try {
                 Thread.sleep(1000);
                 return "Facturas procesadas: " + facturaRepository.findAll().size();
@@ -174,7 +180,7 @@ public class AsyncReportService {
             }
         }, executorService);
         
-        return CompletableFuture.allOf(informeClientes, informeComerciales, informeFacturas)
+        return CompletableFuture.allOf(informeClientes, informeComerciales, informeFacturas) // espera a que todos los informes se completen
             .thenApply(v -> {
                 try {
                     String filename = "informe_completo_" + 
@@ -206,7 +212,7 @@ public class AsyncReportService {
     
  
     public Future<Integer> contarClientesAsync() {
-        return executorService.submit(new Callable<Integer>() {
+        return executorService.submit(new Callable<Integer>() { // contar clientes asíncrono con callable y executor service
             @Override
             public Integer call() throws Exception {
                 Thread.sleep(500);

@@ -9,7 +9,7 @@ import org.david.crm.model.Cliente;
 import org.david.crm.repository.ClienteRepository;
 
 
-public class ClienteReportThread extends Thread {
+public class ClienteReportThread extends Thread { // obtiene los clientes de la base de datos y los escribe en un archivo
     
     private final ClienteRepository clienteRepository;
     private final String outputFile;

@@ -2,6 +2,7 @@ package org.david.crm.filter;
 
 import java.io.IOException;
 
+import org.david.crm.concurrent.AsyncLogService;
 import org.david.crm.concurrent.stats.ApiStatistics;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -18,10 +19,13 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @WebFilter("/api/*")
 @ApplicationScoped
-public class StatisticsFilter implements Filter {
+public class StatisticsFilter implements Filter { // filtra todas las peticiones http y actualiza las estadisticas de la api
     
     @Inject
-    private ApiStatistics apiStatistics; // estadisticas de la api incluye atomaticos para evitar race conditions
+    private ApiStatistics apiStatistics; 
+    
+    @Inject
+    private AsyncLogService logService;
     
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -49,11 +53,17 @@ public class StatisticsFilter implements Filter {
         } catch (Exception e) {
             // Si hay una excepción incrementar contador de fallos
             apiStatistics.incrementFailedRequests();
+            logService.logCriticoAsync("Exception en petición: " + httpRequest.getMethod() + " " + httpRequest.getRequestURI() + " - " + e.getMessage());
             throw e;
         } finally {
             // Calcular tiempo de respuesta y añadirlo al total
             long responseTime = System.currentTimeMillis() - startTime;
             apiStatistics.addResponseTime(responseTime);
+            
+            // Loggear peticiones lentas (> 1 segundo)
+            if (responseTime > 1000) {
+                logService.logAsync("Petición lenta: " + httpRequest.getMethod() + " " + httpRequest.getRequestURI() + " - " + responseTime + "ms");
+            }
         }
     }
 }
