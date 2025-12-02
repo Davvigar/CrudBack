@@ -38,8 +38,9 @@ public class ClienteRepository implements Repository<Cliente, Integer> {
     
     public Optional<Cliente> findByUsername(String username) {
         EntityManager em = getEntityManager();
+        // Búsqueda case-insensitive y con trim para evitar problemas
         TypedQuery<Cliente> query = em.createQuery(
-            "SELECT c FROM Cliente c WHERE c.username = :username", Cliente.class);
+            "SELECT c FROM Cliente c WHERE LOWER(TRIM(c.username)) = LOWER(TRIM(:username))", Cliente.class);
         query.setParameter("username", username);
         return query.getResultStream().findFirst();
     }

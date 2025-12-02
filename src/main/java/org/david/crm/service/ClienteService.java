@@ -45,6 +45,27 @@ public class ClienteService {
     }
     
     public Cliente save(Cliente cliente) {
+        // Limpiar espacios en blanco del username y passwordHash antes de guardar
+        if (cliente.getUsername() != null) {
+            cliente.setUsername(cliente.getUsername().trim());
+        }
+        if (cliente.getPasswordHash() != null) {
+            cliente.setPasswordHash(cliente.getPasswordHash().trim());
+        }
+        
+        // Validar que el username no esté vacío después del trim
+        if (cliente.getUsername() == null || cliente.getUsername().isEmpty()) {
+            throw new IllegalArgumentException("El username no puede estar vacío");
+        }
+        
+        // Verificar si ya existe un cliente con el mismo username (solo para nuevos clientes)
+        if (cliente.getClienteId() == null) {
+            Optional<Cliente> existing = clienteRepository.findByUsername(cliente.getUsername());
+            if (existing.isPresent()) {
+                throw new IllegalArgumentException("Ya existe un cliente con el username: " + cliente.getUsername());
+            }
+        }
+        
         if (cliente.getComercial() != null && cliente.getComercial().getComercialId() != null) {
 
             try {

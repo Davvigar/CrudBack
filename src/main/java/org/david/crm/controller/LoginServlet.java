@@ -1,0 +1,114 @@
+package org.david.crm.controller;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.david.crm.model.Comercial;
+import org.david.crm.model.Cliente;
+import org.david.crm.service.ComercialService;
+import org.david.crm.service.ClienteService;
+import org.mindrot.jbcrypt.BCrypt;
+
+import java.io.IOException;
+import java.util.Optional;
+
+@WebServlet("/api/login")
+@ApplicationScoped
+public class LoginServlet extends HttpServlet {
+
+    @Inject
+    private ComercialService comercialService;
+
+    @Inject
+    private ClienteService clienteService;
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+
+        response.setContentType("text/plain");
+        response.setCharacterEncoding("UTF-8");
+
+        if (username == null || password == null) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("ERROR: Credenciales faltantes.");
+            return;
+        }
+
+        // Limpiar espacios en blanco
+        username = username.trim();
+        password = password.trim();
+
+        try {
+            // Intentar con comercial
+            Optional<Comercial> comercialOpt = comercialService.findByUsername(username);
+            if (comercialOpt.isPresent()) {
+                Comercial comercial = comercialOpt.get();
+                String storedHash = comercial.getPasswordHash();
+                
+                // Verificar contraseña con BCrypt o comparación directa (para compatibilidad con datos antiguos)
+                boolean passwordMatches = false;
+                if (storedHash != null) {
+                    storedHash = storedHash.trim(); // Limpiar espacios del hash almacenado
+                    // Si el hash empieza con $2a$ o $2b$, es un hash BCrypt
+                    if (storedHash.startsWith("$2a$") || storedHash.startsWith("$2b$")) {
+                        passwordMatches = BCrypt.checkpw(password, storedHash);
+                    } else {
+                        // Compatibilidad con contraseñas en texto plano (datos antiguos)
+                        // Comparación case-sensitive
+                        passwordMatches = storedHash.equals(password);
+                    }
+                }
+                
+                if (passwordMatches) {
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.getWriter().write(comercial.getRol() + "," + comercial.getNombre());
+                    return;
+                }
+            }
+
+            // Intentar con cliente
+            Optional<Cliente> clienteOpt = clienteService.findByUsername(username);
+            if (clienteOpt.isPresent()) {
+                Cliente cliente = clienteOpt.get();
+                String storedHash = cliente.getPasswordHash();
+                
+                // Verificar contraseña con BCrypt o comparación directa (para compatibilidad con datos antiguos)
+                boolean passwordMatches = false;
+                if (storedHash != null) {
+                    storedHash = storedHash.trim(); // Limpiar espacios del hash almacenado
+                    // Si el hash empieza con $2a$ o $2b$, es un hash BCrypt
+                    if (storedHash.startsWith("$2a$") || storedHash.startsWith("$2b$")) {
+                        passwordMatches = BCrypt.checkpw(password, storedHash);
+                    } else {
+                        // Compatibilidad con contraseñas en texto plano (datos antiguos)
+                        // Comparación case-sensitive
+                        passwordMatches = storedHash.equals(password);
+                    }
+                }
+                
+                if (passwordMatches) {
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.getWriter().write("cliente," + cliente.getNombre());
+                    return;
+                }
+            }
+
+            // Si no coincide ninguno
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("INVALID");
+
+        } catch (Exception e) {
+            // Manejo seguro de errores internos
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("ERROR: Fallo interno en login. Detalle: " + e.getMessage());
+        }
+    }
+}
