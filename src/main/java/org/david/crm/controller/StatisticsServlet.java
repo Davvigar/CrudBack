@@ -1,14 +1,18 @@
 package org.david.crm.controller;
 
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
+
+import org.david.crm.concurrent.stats.ApiStatistics;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.david.crm.concurrent.stats.ApiStatistics;
-
-import java.io.IOException;
 
 
 @WebServlet("/api/estadisticas")
@@ -23,17 +27,21 @@ public class StatisticsServlet extends BaseServlet {
             throws ServletException, IOException {
         ApiStatistics.StatisticsSummary summary = apiStatistics.getSummary();
         
+        // Usar DecimalFormat con Locale.US para asegurar punto decimal en JSON
+        DecimalFormat df = new DecimalFormat("#.##", DecimalFormatSymbols.getInstance(Locale.US));
+        String avgTimeStr = df.format(summary.getAverageResponseTime());
+        
         String json = String.format(
             "{\"totalRequests\": %d, " +
             "\"successfulRequests\": %d, " +
             "\"failedRequests\": %d, " +
             "\"logsWritten\": %d, " +
-            "\"averageResponseTime\": %.2f}",
+            "\"averageResponseTime\": %s}",
             summary.getTotalRequests(),
             summary.getSuccessfulRequests(),
             summary.getFailedRequests(),
             summary.getLogsWritten(),
-            summary.getAverageResponseTime()
+            avgTimeStr
         );
         
         resp.setContentType("application/json");

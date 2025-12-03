@@ -1,0 +1,6 @@
+=== INFORME COMPLETO ===
+Fecha: 2025-12-03T22:09:57.583583100
+
+Clientes procesados: 11
+Comerciales procesados: 5
+Facturas procesadas: 15

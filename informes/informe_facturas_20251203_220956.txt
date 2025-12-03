@@ -1,0 +1,6 @@
+=== INFORME DE FACTURAS ===
+Fecha: 2025-12-03T22:09:56.147595400
+
+Total de facturas: 15
+Total facturado: 77440.0 €
+

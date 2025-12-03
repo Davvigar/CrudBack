@@ -2,6 +2,9 @@ package org.david.crm.concurrent.stats;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -11,6 +14,35 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class ApiStatistics { // clase que encapsula las estadisticas de la api y las expota a un archivo
+    
+    private Path getReportsDirectory() {
+        try {
+            // Intentar crear en el directorio del proyecto (C:\Users\david\Desktop\CrudProject\informes)
+            Path projectReports = Paths.get(System.getProperty("user.home"), "Desktop", "CrudProject", "informes");
+            
+            // Si no existe, crearlo
+            if (!Files.exists(projectReports)) {
+                Files.createDirectories(projectReports);
+                System.out.println("[ApiStatistics] ✓ Carpeta de informes creada en: " + projectReports.toAbsolutePath());
+            } else {
+                System.out.println("[ApiStatistics] 📁 Carpeta de informes ya existe en: " + projectReports.toAbsolutePath());
+            }
+            
+            return projectReports;
+        } catch (IOException e) {
+            System.err.println("[ApiStatistics] ✗ Error al crear directorio de informes: " + e.getMessage());
+            Path tempDir = Paths.get(System.getProperty("java.io.tmpdir"), "informes");
+            System.out.println("[ApiStatistics] ⚠ Usando directorio temporal: " + tempDir.toAbsolutePath());
+            return tempDir;
+        }
+    }
+    
+    private String getReportPath(String filename) {
+        Path reportsDir = getReportsDirectory();
+        Path filePath = reportsDir.resolve(filename);
+        System.out.println("[ApiStatistics] 📄 Archivo de estadísticas se guardará en: " + filePath.toAbsolutePath());
+        return filePath.toString();
+    }
     
     // contaadires atomicos 
     
@@ -90,7 +122,8 @@ public class ApiStatistics { // clase que encapsula las estadisticas de la api y
     public void exportSummaryAsync(String fileName) {
         Thread exportThread = new Thread(() -> {
             StatisticsSummary summary = getSummary();
-            try (FileWriter writer = new FileWriter(fileName)) {
+            String filepath = getReportPath(fileName);
+            try (FileWriter writer = new FileWriter(filepath)) {
                 writer.write("=== Estadísticas API ===\n");
                 writer.write("Fecha: " + LocalDateTime.now() + "\n\n");
                 writer.write("Total: " + summary.getTotalRequests() + "\n");

@@ -1,0 +1,16 @@
+=== INFORME DE CLIENTES ===
+Fecha: 2025-12-03T22:12:32.732548800
+
+Total de clientes: 11
+
+ID: 1 | Username: cliente1 | Nombre: Pedro Sánchez | Email: pedro.sanchez@email.com
+ID: 2 | Username: cliente2 | Nombre: Laura Rodríguez | Email: laura.rodriguez@email.com
+ID: 3 | Username: cliente3 | Nombre: Miguel Fernández | Email: miguel.fernandez@email.com
+ID: 4 | Username: cliente4 | Nombre: Isabel Torres | Email: isabel.torres@email.com
+ID: 5 | Username: cliente5 | Nombre: Roberto Jiménez | Email: roberto.jimenez@email.com
+ID: 6 | Username: cliente6 | Nombre: Carmen Ruiz | Email: carmen.ruiz@email.com
+ID: 7 | Username: cliente7 | Nombre: David Moreno | Email: david.moreno@email.com
+ID: 8 | Username: cliente8 | Nombre: Sofía Vázquez | Email: sofia.vazquez@email.com
+ID: 9 | Username: cliente9 | Nombre: Javier Herrera | Email: javier.herrera@email.com
+ID: 10 | Username: cliente10 | Nombre: Elena Díaz | Email: elena.diaz@email.com
+ID: 11 | Username: admin | Nombre: chumete chumete | Email: cuhmi@chumi.com

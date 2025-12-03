@@ -32,4 +32,3 @@ public class JsonUtil { // utilidad para convertir objetos a JSON y viceversa
         return objectMapper.writeValueAsString(object);
     }
 }
-
