@@ -24,7 +24,13 @@ public class FacturaRepository implements Repository<Factura, String> {
     @Override
     public List<Factura> findAll() {
         EntityManager em = getEntityManager();
-        TypedQuery<Factura> query = em.createQuery("SELECT f FROM Factura f", Factura.class);
+        TypedQuery<Factura> query = em.createQuery(
+            "SELECT DISTINCT f FROM Factura f " +
+            "LEFT JOIN FETCH f.cliente " +
+            "LEFT JOIN FETCH f.comercial " +
+            "LEFT JOIN FETCH f.producto p " +
+            "LEFT JOIN FETCH p.seccion", 
+            Factura.class);
         return query.getResultList();
     }
     
@@ -38,7 +44,13 @@ public class FacturaRepository implements Repository<Factura, String> {
     public List<Factura> findByClienteId(Integer clienteId) {
         EntityManager em = getEntityManager();
         TypedQuery<Factura> query = em.createQuery(
-            "SELECT f FROM Factura f WHERE f.cliente.clienteId = :clienteId", Factura.class);
+            "SELECT DISTINCT f FROM Factura f " +
+            "LEFT JOIN FETCH f.cliente " +
+            "LEFT JOIN FETCH f.comercial " +
+            "LEFT JOIN FETCH f.producto p " +
+            "LEFT JOIN FETCH p.seccion " +
+            "WHERE f.cliente.clienteId = :clienteId", 
+            Factura.class);
         query.setParameter("clienteId", clienteId);
         return query.getResultList();
     }
@@ -46,7 +58,13 @@ public class FacturaRepository implements Repository<Factura, String> {
     public List<Factura> findByComercialId(Integer comercialId) {
         EntityManager em = getEntityManager();
         TypedQuery<Factura> query = em.createQuery(
-            "SELECT f FROM Factura f WHERE f.comercial.comercialId = :comercialId", Factura.class);
+            "SELECT DISTINCT f FROM Factura f " +
+            "LEFT JOIN FETCH f.cliente " +
+            "LEFT JOIN FETCH f.comercial " +
+            "LEFT JOIN FETCH f.producto p " +
+            "LEFT JOIN FETCH p.seccion " +
+            "WHERE f.comercial.comercialId = :comercialId", 
+            Factura.class);
         query.setParameter("comercialId", comercialId);
         return query.getResultList();
     }

@@ -4,19 +4,25 @@
 -- Base de datos: crudProject
 -- ============================================
 
--- Crear la base de datos si no existe
-CREATE DATABASE IF NOT EXISTS crudProject;
+-- REINICIAR COMPLETAMENTE LA BD (OJO: BORRA TODO)
+DROP DATABASE IF EXISTS crudProject;
+
+CREATE DATABASE crudProject;
+
 USE crudProject;
 
--- ============================================
--- ELIMINAR TABLAS EXISTENTES (si es necesario)
--- ============================================
 SET FOREIGN_KEY_CHECKS = 0;
+
 DROP TABLE IF EXISTS facturas;
+
 DROP TABLE IF EXISTS productos;
+
 DROP TABLE IF EXISTS clientes;
+
 DROP TABLE IF EXISTS comerciales;
+
 DROP TABLE IF EXISTS secciones;
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================
@@ -180,4 +186,3 @@ UNION ALL
 SELECT 'Productos insertados:', COUNT(*) FROM productos
 UNION ALL
 SELECT 'Facturas insertadas:', COUNT(*) FROM facturas;
-

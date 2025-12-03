@@ -25,7 +25,7 @@ public class ClienteRepository implements Repository<Cliente, Integer> {
     @Override
     public List<Cliente> findAll() {
         EntityManager em = getEntityManager();
-        TypedQuery<Cliente> query = em.createQuery("SELECT c FROM Cliente c", Cliente.class);
+        TypedQuery<Cliente> query = em.createQuery("SELECT c FROM Cliente c LEFT JOIN FETCH c.comercial", Cliente.class);
         return query.getResultList();
     }
     

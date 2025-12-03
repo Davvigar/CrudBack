@@ -24,7 +24,7 @@ public class ProductoRepository implements Repository<Producto, Integer> {
     @Override
     public List<Producto> findAll() {
         EntityManager em = getEntityManager();
-        TypedQuery<Producto> query = em.createQuery("SELECT p FROM Producto p", Producto.class);
+        TypedQuery<Producto> query = em.createQuery("SELECT p FROM Producto p LEFT JOIN FETCH p.seccion", Producto.class);
         return query.getResultList();
     }
     
@@ -38,7 +38,7 @@ public class ProductoRepository implements Repository<Producto, Integer> {
     public List<Producto> findBySeccionId(Integer seccionId) {
         EntityManager em = getEntityManager();
         TypedQuery<Producto> query = em.createQuery(
-            "SELECT p FROM Producto p WHERE p.seccion.seccionId = :seccionId", Producto.class);
+            "SELECT p FROM Producto p LEFT JOIN FETCH p.seccion WHERE p.seccion.seccionId = :seccionId", Producto.class);
         query.setParameter("seccionId", seccionId);
         return query.getResultList();
     }
