@@ -60,8 +60,8 @@ public class StatisticsFilter implements Filter { // filtra todas las peticiones
             long responseTime = System.currentTimeMillis() - startTime;
             apiStatistics.addResponseTime(responseTime);
             
-            // Loggear peticiones lentas (> 1 segundo)
-            if (responseTime > 1000) {
+            // Loggear peticiones lentas (>= 1 segundo)
+            if (responseTime >= 1000) {
                 logService.logAsync("Petición lenta: " + httpRequest.getMethod() + " " + httpRequest.getRequestURI() + " - " + responseTime + "ms");
             }
         }
