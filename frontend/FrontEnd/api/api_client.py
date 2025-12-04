@@ -3,25 +3,16 @@ from datetime import datetime
 from collections import defaultdict
 from typing import Any
 
-# ====================================================================
-# --- 1. CONFIGURACIÓN ---
-# ====================================================================
-
-# Base URL (Application context configurado como "/" en Tomcat)
 BASE_URL = "http://localhost:8080/api"
 
-# --- GESTIÓN DE SESIÓN Y AUTENTICACIÓN ---
 GLOBAL_SESSION = requests.Session()
 GLOBAL_USER_INFO = {"logueado": False, "rol": None, "nombre": None}
 
 def _limpiar_total_factura(total_str):
-    """Convierte el total de factura a float, manejando diferentes formatos."""
     try:
         if total_str is None:
             return 0.0
-        # Convertir a string y limpiar
         total_limpio = str(total_str).replace('€', '').replace(',', '').strip()
-        # Si está vacío, retornar 0
         if not total_limpio:
             return 0.0
         return float(total_limpio)
@@ -29,8 +20,6 @@ def _limpiar_total_factura(total_str):
         return 0.0
         
 def _normalizar_datos_desde_api(datos: Any) -> Any:
-    # Función para convertir claves de camelCase (Java) a snake_case (Python)
-    # También extrae IDs de objetos anidados (cliente, comercial, producto, seccion)
     if isinstance(datos, dict):
         new_dict = {}
         key_mapping = {
@@ -41,25 +30,17 @@ def _normalizar_datos_desde_api(datos: Any) -> Any:
         }
         
         for key, value in datos.items():
-            # Si el valor es un objeto anidado (cliente, comercial, producto, seccion), extraer su ID
             if isinstance(value, dict) and key in ['cliente', 'comercial', 'producto', 'seccion']:
-                # Extraer el ID del objeto anidado (puede estar en camelCase o snake_case)
-                nested_id_key_camel = key + 'Id'  # clienteId, comercialId, etc.
+                nested_id_key_camel = key + 'Id' 
                 nested_id_key_snake = key + '_id'
                 nested_id = value.get(nested_id_key_camel) or value.get(nested_id_key_snake)
                 if nested_id is not None:
                     new_dict[key + '_id'] = nested_id
-                # No guardamos el objeto completo, solo el ID que es lo que necesita la tabla
             else:
-                # Normalizar la clave
                 new_key = key_mapping.get(key, key)
-                # Normalizar recursivamente el valor (puede ser un objeto anidado o lista)
                 valor_normalizado = _normalizar_datos_desde_api(value)
                 
-                # Para campos numéricos, mantener como número (no convertir a string)
-                # Esto permite que las funciones de estadísticas funcionen correctamente
                 if isinstance(valor_normalizado, (int, float)) and key in ['total', 'subtotal', 'totalIva', 'total_iva', 'precioBase', 'precio_base']:
-                    # Mantener como número para cálculos estadísticos
                     new_dict[new_key] = float(valor_normalizado)
                 else:
                     new_dict[new_key] = valor_normalizado
@@ -68,18 +49,11 @@ def _normalizar_datos_desde_api(datos: Any) -> Any:
         return [_normalizar_datos_desde_api(item) for item in datos]
     return datos
 
-
-# ====================================================================
-# --- 2. FUNCIÓN DE UTILIDAD CENTRAL (CONEXIÓN REAL) ---
-# ====================================================================
-
 def _manejar_peticion(metodo, endpoint, data = None, params = None):
     url = f"{BASE_URL}/{endpoint}"
     try:
         if metodo == 'GET':
             response = GLOBAL_SESSION.get(url, params=params)
-        # ⚠️ Nota: Usamos 'json=data' para el CRUD, no 'data=data'.
-        # Solo el login usa 'data='
         elif metodo == 'POST':
             response = GLOBAL_SESSION.post(url, json=data)
         elif metodo == 'PUT':
@@ -96,7 +70,6 @@ def _manejar_peticion(metodo, endpoint, data = None, params = None):
                 json_data = response.json()
                 return _normalizar_datos_desde_api(json_data)
             except (ValueError, requests.exceptions.JSONDecodeError):
-                # Si el JSON no es válido, devolver None
                 return None
         
         return True
@@ -106,31 +79,20 @@ def _manejar_peticion(metodo, endpoint, data = None, params = None):
     except (requests.exceptions.RequestException, ValueError):
         return None
 
-# ====================================================================
-# --- 3. AUTENTICACIÓN Y CRUD BASE ---
-# ====================================================================
-
-#  FUNCIÓN DE LOGIN QUE INTERACTUA CON LOGINSERVLET (/api/login)
+#  FUNCIÓN DE LOGIN 
 def login_autenticacion(username, password):
-    """
-    Intenta autenticar al usuario usando el endpoint /api/login del Servlet.
-    Devuelve datos de usuario (diccionario) si es exitoso, False si falla.
-    """
+   
     global GLOBAL_USER_INFO
     endpoint = "login"
     url = f"{BASE_URL}/{endpoint}"
     
-    # :
-    # 1. Creamos LOS DATOS PROPORCIONADOS  como diccionario
     datos_formulario = {"username": username, "password": password}
     
     GLOBAL_USER_INFO["logueado"] = False
     try:
-        # Usamos 'data' para enviar form-urlencoded, compatible con request.getParameter()
         response = GLOBAL_SESSION.post(url, data=datos_formulario)
         
         if response.status_code == 200:
-            # Esperamos: ROL,NOMBRE (ej: admin,David López)
             respuesta_texto = response.text
             if ',' in respuesta_texto:
                 rol, nombre = respuesta_texto.split(',', 1)
@@ -141,16 +103,12 @@ def login_autenticacion(username, password):
                 
                 return {"username": username, "nombre": nombre.strip(), "rol": rol.lower()}
         
-        # Si falla es por 401 Unauthorized o 400 Bad Request
         return False
         
     except requests.exceptions.RequestException:
-        # Falla de conexión
         return None
         
-# -----------------------------------------------------------
-# 4. COMERCIALES (/api/comerciales) 
-# -----------------------------------------------------------
+#  COMERCIALES (/api/comerciales) 
 
 def obtener_comerciales():
     return _manejar_peticion('GET', 'comerciales') or []
@@ -167,9 +125,7 @@ def actualizar_comercial(id, datos):
 def eliminar_comercial(id):
     return _manejar_peticion('DELETE', f'comerciales/{id}') is True
 
-# --------------------------------------------------------------------
-# 5. CLIENTES (/api/clientes)
-# --------------------------------------------------------------------
+#  CLIENTES (/api/clientes)
 
 def obtener_clientes(comercial_id = None):
     params = {'comercialId': comercial_id} if comercial_id is not None else None
@@ -187,9 +143,7 @@ def actualizar_cliente(id, datos):
 def eliminar_cliente(id):
     return _manejar_peticion('DELETE', f'clientes/{id}') is True
 
-# --------------------------------------------------------------------
-# 6. SECCIONES (/api/secciones)
-# --------------------------------------------------------------------
+#  SECCIONES (/api/secciones)
 
 def obtener_secciones():
     return _manejar_peticion('GET', 'secciones') or []
@@ -206,9 +160,7 @@ def actualizar_seccion(id, datos):
 def eliminar_seccion(id):
     return _manejar_peticion('DELETE', f'secciones/{id}') is True
 
-# --------------------------------------------------------------------
-# 7. PRODUCTOS (/api/productos)
-# --------------------------------------------------------------------
+# PRODUCTOS (/api/productos)
 
 def obtener_productos(seccion_id = None):
     params = {'seccionId': seccion_id} if seccion_id is not None else None
@@ -226,9 +178,7 @@ def actualizar_producto(id, datos):
 def eliminar_producto(id):
     return _manejar_peticion('DELETE', f'productos/{id}') is True
 
-# --------------------------------------------------------------------
-# 8. FACTURAS (/api/facturas)
-# --------------------------------------------------------------------
+# FACTURAS (/api/facturas)
 
 def obtener_facturas(cliente_id = None, comercial_id = None):
     params = {}
@@ -248,9 +198,7 @@ def actualizar_factura(id, datos):
 def eliminar_factura(id):
     return _manejar_peticion('DELETE', f'facturas/{id}') is True
 
-# --------------------------------------------------------------------
-# 9 y 10. INFORMES Y ESTADÍSTICAS
-# --------------------------------------------------------------------
+# INFORMES Y ESTADÍSTICAS
 
 def arrancar_informe(tipo):
     if tipo not in ['clientes', 'facturas', 'completo']: return None
@@ -258,7 +206,6 @@ def arrancar_informe(tipo):
 
 def obtener_estadisticas_api():
     resultado = _manejar_peticion('GET', 'estadisticas')
-    # Si hay error, devolver valores por defecto
     if resultado is None:
         return {'totalRequests': 0, 'successfulRequests': 0, 'failedRequests': 0, 'averageResponseTime': 0.0}
     return resultado
@@ -270,7 +217,7 @@ def exportar_estadisticas(nombre_archivo = None):
 def resetear_estadisticas():
     return _manejar_peticion('DELETE', f'estadisticas') is True
 
-# --- Funciones de Dashboard ---
+# Funciones de Dashboard 
 
 def obtener_facturas_para_estadisticas(): return obtener_facturas()
 def obtener_comerciales_para_estadisticas(): return obtener_comerciales()
@@ -289,8 +236,7 @@ def get_ingresos_mensuales():
     ingresos_por_mes = defaultdict(float)
     
     for factura in facturas:
-        # Obtener el total (puede venir como string formateado o número)
-        total_raw = factura.get('total', 0)
+        total_raw = factura.get('total', 0) #obtener total
         total = _limpiar_total_factura(total_raw)
         
         fecha_str = factura.get('fecha_emision')
@@ -299,11 +245,8 @@ def get_ingresos_mensuales():
             continue
         
         try:
-            # Manejar diferentes formatos de fecha
             fecha_dt = None
             if isinstance(fecha_str, list):
-                # Jackson serializa LocalDateTime como lista [año, mes, día, hora, minuto, segundo, nanosegundo]
-                # Ejemplo: [2024, 1, 15, 11, 30] -> año=2024, mes=1, día=15, hora=11, minuto=30
                 if len(fecha_str) >= 3:
                     año = fecha_str[0]
                     mes = fecha_str[1]
@@ -313,7 +256,6 @@ def get_ingresos_mensuales():
                     segundo = fecha_str[5] if len(fecha_str) > 5 else 0
                     fecha_dt = datetime(año, mes, día, hora, minuto, segundo)
             elif isinstance(fecha_str, str):
-                # Si tiene 'T', usar solo la parte de la fecha
                 if 'T' in fecha_str:
                     fecha_part = fecha_str.split('T')[0]
                     fecha_dt = datetime.strptime(fecha_part, "%Y-%m-%d")
@@ -321,7 +263,6 @@ def get_ingresos_mensuales():
                     fecha_part = fecha_str.split()[0]
                     fecha_dt = datetime.strptime(fecha_part, "%Y-%m-%d")
                 else:
-                    # Intentar parsear directamente
                     fecha_dt = datetime.strptime(fecha_str, "%Y-%m-%d")
             
             if fecha_dt:
@@ -356,7 +297,7 @@ def get_ranking_comerciales():
     ranking.sort(key=lambda x: x['ingresos'], reverse=True)
     return ranking
 
-# FUNCIÓN: CLIENTES POR COMERCIAL PARA ESTADISTICASS
+# FUNCIÓN CLIENTES POR COMERCIAL PARA ESTADISTICASS
 def get_clientes_por_comercial():
     comerciales = obtener_comerciales_para_estadisticas()
     clientes = obtener_clientes()
@@ -381,14 +322,12 @@ def get_productos_mas_vendidos():
     facturas = obtener_facturas_para_estadisticas()
     productos = obtener_productos()
     
-    # Contar facturas por producto
     ventas_por_producto = defaultdict(int)
     for factura in facturas:
         producto_id = factura.get('producto_id')
         if producto_id:
             ventas_por_producto[producto_id] += 1
     
-    # Mapear IDs a nombres de productos
     nombres_productos = {p.get('producto_id'): p.get('nombre', 'Desconocido') 
                         for p in productos if 'producto_id' in p}
     
@@ -406,15 +345,12 @@ def get_ingresos_por_seccion():
     productos = obtener_productos()
     secciones = obtener_secciones()
     
-    # Mapear producto_id a seccion_id
     producto_a_seccion = {p.get('producto_id'): p.get('seccion_id') 
                          for p in productos if 'producto_id' in p}
     
-    # Mapear seccion_id a nombre
     seccion_nombres = {s.get('seccion_id'): s.get('nombre', 'Desconocida')
                       for s in secciones if 'seccion_id' in s}
     
-    # Calcular ingresos por sección
     ingresos_por_seccion = defaultdict(float)
     for factura in facturas:
         producto_id = factura.get('producto_id')
@@ -423,7 +359,6 @@ def get_ingresos_por_seccion():
             total = _limpiar_total_factura(factura.get('total', 0))
             ingresos_por_seccion[seccion_id] += total
     
-    # Formatear resultado
     resultado = []
     for seccion_id, total in ingresos_por_seccion.items():
         nombre = seccion_nombres.get(seccion_id, f"Sección {seccion_id}")

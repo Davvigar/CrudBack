@@ -1,7 +1,7 @@
 from customtkinter import CTkFrame, CTkButton, CTkEntry, CTkLabel 
 import tkinter.messagebox as tk_messagebox
 import re 
-from datetime import datetime # Necesario para la fecha de emisión
+from datetime import datetime 
 
 from components.data_table import DataTable
 from components.modal_form import ModalForm
@@ -10,46 +10,38 @@ from api import api_client
 
 # --- FUNCIONES DE VALIDACIÓN ---
 def validar_id_factura(valor):
-    # Valida que el ID de factura no esté vacío.
     if not valor: return "El ID de factura es obligatorio.", False
     return "✅", True
 def validar_id_entidad(valor):
-    # Valida que el ID (Cliente/Comercial/Producto) sea un número positivo.
     if not valor: return "El ID es obligatorio.", False
     try:
         if int(valor) <= 0: return "Debe ser un número positivo.", False
         return "✅", True
     except ValueError: return "Debe ser un número entero.", False
 def validar_total(valor):
-    # Valida que el Total sea un número positivo y válido.
     if not valor: return "El Total es obligatorio.", False
     try:
-        # Permite comas o puntos, pero el float lo normalizará
         total = float(str(valor).replace(',', '.')) 
         if total <= 0: return "El total debe ser positivo.", False
         return "✅", True
     except ValueError: return "Debe ser un número válido (decimales permitidos).", False
 
-# --- VISTA COMPLETA CON CRUD DE FACTURAS ---
+# --- VISTA CON CRUD DE FACTURAS ---
 
 class VistaFacturas(CTkFrame):
-    # Frame que contiene la tabla de Facturas y los controles CRUD.
     def __init__(self, maestro, **kwargs):
         super().__init__(maestro, **kwargs)
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1) 
         self.id_seleccionado = None 
-        # Almacena el objeto completo de la factura para la actualización (PUT).
         self.factura_en_edicion = None
 
         self.marco_control = CTkFrame(self, fg_color="transparent")
         self.marco_control.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="new")
 
-        # Botones CRUD (Nuevo y Recargar)
         CTkButton(self.marco_control, text="Nuevo (C)", command=self._abrir_modal_crear_factura).pack(side="right", padx=5)
         CTkButton(self.marco_control, text="Recargar", command=self.cargar_datos_factura).pack(side="right", padx=5)
 
-        # Inicialización de la Tabla de Datos
         columnas_factura = ["factura_id", "cliente_id", "comercial_id", "fecha_emision", "estado", "total"]
         self.tabla_datos = DataTable(self, columnas=columnas_factura, 
                                      al_seleccionar_item=self.al_seleccionar_fila,
@@ -58,19 +50,15 @@ class VistaFacturas(CTkFrame):
         
         self.cargar_datos_factura()
         
-        # Marco de Acciones inferiores (Editar y Eliminar)
         self.marco_accion = CTkFrame(self, fg_color="transparent")
         self.marco_accion.grid(row=2, column=0, padx=10, pady=5, sticky="se")
         
-        # Botón de Edición (UPDATE)
         CTkButton(self.marco_accion, text="Editar (U)", command=self._abrir_modal_editar_factura).pack(side="right", padx=5)
         
-        # Botón de Eliminar (DELETE) con confirmación
         CTkButton(self.marco_accion, text="Eliminar (D)", fg_color="red", 
                  hover_color="#AA0000", command=self._confirmar_y_eliminar).pack(side="right", padx=5)
         
     def cargar_datos_factura(self):
-        # Carga datos de la API y actualiza la tabla.
         datos = api_client.obtener_facturas()
         if datos is None:
               tk_messagebox.showerror("Error de Conexión", "No se pudieron obtener las facturas. Verifique el servidor REST.")
@@ -79,22 +67,19 @@ class VistaFacturas(CTkFrame):
               self.tabla_datos.actualizar_datos(datos)
 
     def al_seleccionar_fila(self, id_factura):
-        # Guarda el ID de la fila seleccionada (debe ser string/VARCHAR).
         self.id_seleccionado = str(id_factura)
     
     def _mostrar_detalles_factura(self, factura_data):
-        # Muestra los detalles completos de una factura
         DetailView(self.master, f"Detalles de Factura: {factura_data.get('factura_id', 'N/A')}", 
                   factura_data)
         
     def _obtener_clientes_para_modal(self) -> list:
-        """Carga clientes de la API y crea opciones para el combobox."""
         clientes = api_client.obtener_clientes()
         if not clientes:
             return ["No hay clientes disponibles"]
         
         opciones = []
-        self.clientes_map = {}  # Mapeo: display_name -> cliente_id
+        self.clientes_map = {} 
         
         for c in clientes:
             cliente_id = c.get('cliente_id')
@@ -109,13 +94,12 @@ class VistaFacturas(CTkFrame):
         return opciones
     
     def _obtener_comerciales_para_modal(self) -> list:
-        """Carga comerciales de la API y crea opciones para el combobox."""
         comerciales = api_client.obtener_comerciales()
         if not comerciales:
             return ["No hay comerciales disponibles"]
         
         opciones = []
-        self.comerciales_map = {}  # Mapeo: display_name -> comercial_id
+        self.comerciales_map = {} 
         
         for c in comerciales:
             comercial_id = c.get('comercial_id')
@@ -129,14 +113,13 @@ class VistaFacturas(CTkFrame):
         return opciones
     
     def _obtener_productos_para_modal(self) -> list:
-        """Carga productos de la API y crea opciones para el combobox."""
         productos = api_client.obtener_productos()
         if not productos:
             return ["No hay productos disponibles"]
         
         opciones = []
-        self.productos_map = {}  # Mapeo: display_name -> producto_id
-        self.productos_precios = {}  # Mapeo: producto_id -> precio
+        self.productos_map = {} 
+        self.productos_precios = {} 
         
         for p in productos:
             producto_id = p.get('producto_id')
@@ -155,32 +138,26 @@ class VistaFacturas(CTkFrame):
         return opciones
     
     def _get_factura_fields(self, is_edit=False):
-        # Define la configuración de campos para Crear y Editar Factura.
         opciones_clientes = self._obtener_clientes_para_modal()
         opciones_comerciales = self._obtener_comerciales_para_modal()
         opciones_productos = self._obtener_productos_para_modal()
         
         fields = [
-            # Cliente como combobox
             {
                 'label': 'Cliente:',
                 'options': opciones_clientes,
                 'key': 'cliente_display_name'
             },
-            # Comercial como combobox
             {
                 'label': 'Comercial:',
                 'options': opciones_comerciales,
                 'key': 'comercial_display_name'
             },
-            # Total (€)
             {'label': 'Total (€):', 'validator': validar_total, 'key': 'total'},
         ]
         
         if not is_edit:
-            # ID Factura (solo al crear)
             fields.insert(0, {'label': 'ID Factura:', 'validator': validar_id_factura, 'key': 'factura_id'})
-            # Producto como combobox (solo al crear)
             fields.insert(3, {
                 'label': 'Producto:',
                 'options': opciones_productos,
@@ -190,20 +167,17 @@ class VistaFacturas(CTkFrame):
         return fields
 
     def _abrir_modal_crear_factura(self):
-        # Abre el modal para crear una nueva factura.
         ModalForm(self.master, 
                   title="Crear Nueva Factura", 
                   fields_config=self._get_factura_fields(is_edit=False), 
                   action_callback=self._crear_factura_y_guardar)
 
     def _abrir_modal_editar_factura(self):
-        # Obtiene la factura por ID y abre el modal.
         if self.id_seleccionado is None:
             tk_messagebox.showwarning("Advertencia", "Selecciona una factura de la tabla para editar.")
             return
 
         try:
-            # 1. Obtener datos de la factura seleccionada de la API
             datos_api = api_client.obtener_factura_por_id(self.id_seleccionado)
             
             if isinstance(datos_api, list) and len(datos_api) > 0:
@@ -213,17 +187,13 @@ class VistaFacturas(CTkFrame):
             else:
                  raise Exception("Factura no encontrada o formato de respuesta inválido.")
             
-            # Guardamos el objeto completo para reenviar campos obligatorios en el PUT
             self.factura_en_edicion = datos_actuales
             
-            # 2. Preparar datos iniciales: convertir IDs a display names para los combobox
             initial_data = datos_actuales.copy()
             
-            # Cargar opciones para los mapeos
             self._obtener_clientes_para_modal()
             self._obtener_comerciales_para_modal()
             
-            # Convertir cliente_id a display_name
             cliente_id = datos_actuales.get('cliente_id') or (datos_actuales.get('cliente', {}).get('cliente_id') if isinstance(datos_actuales.get('cliente'), dict) else None)
             if cliente_id:
                 for display_name, cid in self.clientes_map.items():
@@ -231,7 +201,6 @@ class VistaFacturas(CTkFrame):
                         initial_data['cliente_display_name'] = display_name
                         break
             
-            # Convertir comercial_id a display_name
             comercial_id = datos_actuales.get('comercial_id') or (datos_actuales.get('comercial', {}).get('comercial_id') if isinstance(datos_actuales.get('comercial'), dict) else None)
             if comercial_id:
                 for display_name, cid in self.comerciales_map.items():
@@ -239,7 +208,6 @@ class VistaFacturas(CTkFrame):
                         initial_data['comercial_display_name'] = display_name
                         break
 
-            # 3. Abrir el modal con datos pre-cargados
             ModalForm(self.master, 
                       title=f"Editar Factura ID: {self.id_seleccionado}", 
                       fields_config=self._get_factura_fields(is_edit=True), 
@@ -251,16 +219,13 @@ class VistaFacturas(CTkFrame):
 
 
     def _crear_factura_y_guardar(self, data):
-        # Lógica para POST /api/facturas. Convierte snake_case a camelCase y estructura los objetos.
         try:
-            # Convertir los datos del formulario (snake_case) al formato esperado por Java (camelCase)
             factura_data = {
                 'facturaId': data.get('factura_id', ''),
                 'estado': 'pendiente',
                 'fechaEmision': datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),  # Formato ISO para LocalDateTime
             }
             
-            # Extraer IDs de los combobox (display_name -> ID)
             if 'cliente_display_name' in data and data['cliente_display_name']:
                 cliente_display = data['cliente_display_name']
                 cliente_id = self.clientes_map.get(cliente_display)
@@ -278,18 +243,15 @@ class VistaFacturas(CTkFrame):
                 producto_id = self.productos_map.get(producto_display)
                 if producto_id:
                     factura_data['producto'] = {'productoId': int(producto_id)}
-                    # Actualizar el total con el precio del producto si no se ha especificado
                     if 'total' not in data or not data['total']:
                         precio = self.productos_precios.get(producto_id, 0.0)
                         factura_data['total'] = precio
                         factura_data['subtotal'] = round(precio / 1.21, 2)
                         factura_data['totalIva'] = round(precio - factura_data['subtotal'], 2)
             
-            # Convertir total a BigDecimal (enviar como número)
             if 'total' in data and data['total']:
                 total = float(str(data['total']).replace(',', '.'))
                 factura_data['total'] = total
-                # Calcular subtotal e IVA (21% IVA)
                 factura_data['subtotal'] = round(total / 1.21, 2)
                 factura_data['totalIva'] = round(total - factura_data['subtotal'], 2)
             
@@ -307,7 +269,6 @@ class VistaFacturas(CTkFrame):
             return False
 
     def _actualizar_factura_y_guardar(self, data):
-        # Lógica para PUT /api/facturas/{id}. Convierte snake_case a camelCase y estructura los objetos.
         if not self.factura_en_edicion:
             tk_messagebox.showerror("Error", "Error interno: Objeto de edición no cargado.")
             return False
@@ -315,23 +276,19 @@ class VistaFacturas(CTkFrame):
         try:
             factura_previo = self.factura_en_edicion
             
-            # Convertir los datos del formulario (snake_case) al formato esperado por Java (camelCase)
             factura_data = {}
             
-            # Cargar mapeos si no están cargados
             if not hasattr(self, 'clientes_map'):
                 self._obtener_clientes_para_modal()
             if not hasattr(self, 'comerciales_map'):
                 self._obtener_comerciales_para_modal()
             
-            # Extraer IDs de los combobox (display_name -> ID)
             if 'cliente_display_name' in data and data['cliente_display_name']:
                 cliente_display = data['cliente_display_name']
                 cliente_id = self.clientes_map.get(cliente_display)
                 if cliente_id:
                     factura_data['cliente'] = {'clienteId': int(cliente_id)}
             else:
-                # Mantener el cliente existente si no se modifica
                 cliente_id = factura_previo.get('clienteId') or factura_previo.get('cliente_id')
                 if cliente_id:
                     if isinstance(cliente_id, dict):
@@ -344,29 +301,24 @@ class VistaFacturas(CTkFrame):
                 if comercial_id:
                     factura_data['comercial'] = {'comercialId': int(comercial_id)}
             else:
-                # Mantener el comercial existente si no se modifica
                 comercial_id = factura_previo.get('comercialId') or factura_previo.get('comercial_id')
                 if comercial_id:
                     if isinstance(comercial_id, dict):
                         comercial_id = comercial_id.get('comercialId', comercial_id.get('comercial_id'))
                     factura_data['comercial'] = {'comercialId': int(comercial_id)}
             
-            # Mantener el producto existente (no se puede modificar en edición)
             producto_id = factura_previo.get('productoId') or factura_previo.get('producto_id')
             if producto_id:
                 if isinstance(producto_id, dict):
                     producto_id = producto_id.get('productoId', producto_id.get('producto_id'))
                 factura_data['producto'] = {'productoId': int(producto_id)}
             
-            # Convertir total a BigDecimal (enviar como número)
             if 'total' in data and data['total']:
                 total = float(str(data['total']).replace(',', '.'))
                 factura_data['total'] = total
-                # Calcular subtotal e IVA (21% IVA)
                 factura_data['subtotal'] = round(total / 1.21, 2)
                 factura_data['totalIva'] = round(total - factura_data['subtotal'], 2)
             
-            # Mantener campos obligatorios
             factura_data['facturaId'] = factura_previo.get('facturaId') or factura_previo.get('factura_id') or self.id_seleccionado
             factura_data['estado'] = factura_previo.get('estado', 'pendiente')
             factura_data['fechaEmision'] = factura_previo.get('fechaEmision') or factura_previo.get('fecha_emision')
@@ -386,7 +338,6 @@ class VistaFacturas(CTkFrame):
             return False
 
     def _confirmar_y_eliminar(self):
-        # Pide confirmación y llama a la API para eliminar.
         if self.id_seleccionado is None:
             tk_messagebox.showwarning("Advertencia", "Selecciona una factura de la tabla para eliminar.")
             return

@@ -22,57 +22,46 @@ def validar_telefono(valor):
     if not valor.isdigit() or len(valor) < 6: return "El teléfono debe ser solo números (min 6).", False
     return "✅", True
 
-# --- VISTA COMPLETA CON CRUD DE COMERCIALES ---
+# --- VISTA CRUD DE COMERCIALES ---
 
 class VistaComerciales(CTkFrame):
-    # Frame que contiene la tabla de comerciales y los controles CRUD.
     def __init__(self, maestro, **kwargs):
         super().__init__(maestro, **kwargs)
-        # Asegura que la tabla y controles se expandan
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1) 
         
-        # Variables de estado para la selección/edición
         self.id_seleccionado: Optional[int] = None 
         self.comercial_en_edicion: Optional[Dict[str, Any]] = None 
         
-        # Marco de control superior
         self.marco_control = CTkFrame(self, fg_color="transparent")
         self.marco_control.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="new")
 
-        # Botones CRUD (Nuevo y Recargar)
         CTkButton(self.marco_control, text="Nuevo (C)", command=self._abrir_modal_crear_comercial).pack(side="right", padx=5)
         CTkButton(self.marco_control, text="Recargar", command=self.cargar_datos_comercial).pack(side="right", padx=5)
 
-        # Inicialización de la Tabla de Datos
         columnas_comercial = ["comercial_id", "nombre", "email", "telefono", "rol", "username"] 
         self.tabla_datos = DataTable(self, columnas=columnas_comercial, 
                                      al_seleccionar_item=self.al_seleccionar_fila,
                                      al_doble_clic=self._mostrar_detalles_comercial)
-        self.tabla_datos.grid(row=1, column=0, padx=10, pady=5, sticky="nsew") # La tabla se inserta aquí
-        self.cargar_datos_comercial() # Llama a la carga inicial de datos
+        self.tabla_datos.grid(row=1, column=0, padx=10, pady=5, sticky="nsew") 
+        self.cargar_datos_comercial()
         
-        # Marco de Acciones inferiores
         self.marco_accion = CTkFrame(self, fg_color="transparent")
         self.marco_accion.grid(row=2, column=0, padx=10, pady=5, sticky="se")
         
-        # Botones Editar y Eliminar
         CTkButton(self.marco_accion, text="Editar (U)", command=self._abrir_modal_editar_comercial).pack(side="right", padx=5)
         CTkButton(self.marco_accion, text="Eliminar (D)", fg_color="red", 
                  hover_color="#AA0000", command=self._confirmar_y_eliminar).pack(side="right", padx=5)
         
     def cargar_datos_comercial(self):
-        # Carga datos de la API y actualiza la tabla.
         datos = api_client.obtener_comerciales()
         if datos is None:
-              # Muestra error y vacía la tabla si la conexión falla.
               tk_messagebox.showerror("Error de Conexión", "No se pudieron obtener los comerciales. Verifique el servidor REST.")
               self.tabla_datos.actualizar_datos([]) 
         else:
               self.tabla_datos.actualizar_datos(datos)
 
     def al_seleccionar_fila(self, id_comercial):
-        # Guarda el ID de la fila seleccionada, normalizándolo a entero.
         try:
             self.id_seleccionado = int(id_comercial)
         except (ValueError, TypeError):
@@ -80,12 +69,10 @@ class VistaComerciales(CTkFrame):
             
     
     def _mostrar_detalles_comercial(self, comercial_data):
-        # Muestra los detalles completos de un comercial
         DetailView(self.master, f"Detalles de Comercial: {comercial_data.get('nombre', 'N/A')}", 
                   comercial_data)
         
     def _get_comercial_fields(self):
-        # Define la configuración de los campos del formulario modal.
         return [
             {'label': 'Nombre Completo:', 'validator': validar_nombre, 'key': 'nombre'},
             {'label': 'Email:', 'validator': validar_email, 'key': 'email'},
@@ -96,14 +83,12 @@ class VistaComerciales(CTkFrame):
     # --- FUNCIONES DE CALLBACK ---
 
     def _abrir_modal_crear_comercial(self):
-        # Abre el modal para crear un nuevo comercial.
         ModalForm(self.master, 
                   title="Crear Nuevo Comercial", 
                   fields_config=self._get_comercial_fields(), 
                   action_callback=self._crear_comercial_y_guardar)
 
     def _abrir_modal_editar_comercial(self):
-        # Comprueba la selección, obtiene el comercial por ID de la API y abre el modal.
         if self.id_seleccionado is None:
             tk_messagebox.showwarning("Advertencia", "Selecciona un comercial de la tabla para editar.")
             return
@@ -131,9 +116,7 @@ class VistaComerciales(CTkFrame):
 
 
     def _crear_comercial_y_guardar(self, data):
-        # POST /api/comerciales. Añade 'rol' y 'passwordHash' por defecto.
         try:
-            # Añadir campos NOT NULL requeridos por la BD
             data['rol'] = "comercial" 
             data['passwordHash'] = "defaultpass123" 
             
@@ -151,7 +134,6 @@ class VistaComerciales(CTkFrame):
             return False
 
     def _actualizar_comercial_y_guardar(self, data):
-        # PUT /api/comerciales/{id}. Reenvía campos obligatorios (rol, hash) con datos previos.
         if not self.comercial_en_edicion:
             tk_messagebox.showerror("Error", "Error interno: Objeto de edición no cargado.")
             return False
@@ -159,7 +141,6 @@ class VistaComerciales(CTkFrame):
         try:
             comercial_previo = self.comercial_en_edicion
             
-            # 1. Objeto final con campos modificados
             data_final = {
                 'nombre': data.get('nombre'),
                 'email': data.get('email'),
@@ -167,11 +148,9 @@ class VistaComerciales(CTkFrame):
                 'username': data.get('username'),
             }
             
-            # 2. Reenviar campos obligatorios NOT NULL
             data_final['rol'] = comercial_previo.get('rol')
             data_final['passwordHash'] = comercial_previo.get('passwordHash') 
             
-            # 3. Incluir el ID para el ORM de Java
             data_final['comercialId'] = self.id_seleccionado
             
             if api_client.actualizar_comercial(self.id_seleccionado, data_final):
@@ -187,7 +166,6 @@ class VistaComerciales(CTkFrame):
             return False
 
     def _confirmar_y_eliminar(self):
-        # Pide confirmación y llama a la API para eliminar.
         if self.id_seleccionado is None:
             tk_messagebox.showwarning("Advertencia", "Selecciona un comercial para eliminar.")
             return

@@ -3,14 +3,11 @@ import tkinter.messagebox as tk_messagebox
 import re
 from api import api_client
 
-# Importa componentes de tabla y modal
 from components.data_table import DataTable
 from components.modal_form import ModalForm
 from components.detail_view import DetailView 
 
-# ====================================================================
-# --- FUNCIONES DE VALIDACIÓN SIMPLIFICADAS ---
-# ====================================================================
+# --- FUNCIONES DE VALIDACIÓN ---
 
 def validar_nombre_y_apellidos(valor):
     if not valor: return "Campo obligatorio.", False
@@ -42,20 +39,13 @@ def validar_direccion(valor):
     return "✅", True
 
 
-# ====================================================================
-# --- VISTA COMPLETA CON CRUD DE CLIENTES ---
-# ====================================================================
-
 class VistaClientes(CTkFrame):
-    # Frame que contiene la tabla de clientes y los controles CRUD.
     
     def __init__(self, maestro, **kwargs):
         super().__init__(maestro, **kwargs)
         self.grid_columnconfigure(0, weight=1)
-        # La fila 1 (tabla) debe expandirse
         self.grid_rowconfigure(1, weight=1) 
         
-        # Variables de estado para la selección
         self.id_seleccionado = None
         self.cliente_en_edicion = None
         self.valor_celda_seleccionada = None
@@ -64,24 +54,20 @@ class VistaClientes(CTkFrame):
         self.cargar_datos_cliente()
         
     def _inicializar_controles(self):
-        # Define el layout, input de búsqueda y botones.
         
         self.marco_control = CTkFrame(self, fg_color="transparent")
         self.marco_control.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="new")
         self.marco_control.grid_columnconfigure(0, weight=1)
 
-        # Botones CRUD (Nuevo y Recargar)
         CTkButton(self.marco_control, text="Nuevo (C)", command=self._abrir_modal_crear_cliente).pack(side="right", padx=5)
         CTkButton(self.marco_control, text="Recargar", command=self.cargar_datos_cliente).pack(side="right", padx=5)
 
-        # Inicialización de la Tabla de Datos
         columnas_cliente = ["cliente_id", "nombre", "apellidos", "edad", "email", "telefono", "direccion", "comercial_id"]
         self.tabla_datos = DataTable(self, columnas=columnas_cliente, 
                                      al_seleccionar_item=self.al_seleccionar_fila,
                                      al_doble_clic=self._mostrar_detalles_cliente)
         self.tabla_datos.grid(row=1, column=0, padx=10, pady=5, sticky="nsew")
         
-        # Marco de Acciones inferiores (Editar/Eliminar)
         self.marco_accion = CTkFrame(self, fg_color="transparent")
         self.marco_accion.grid(row=2, column=0, padx=10, pady=5, sticky="se")
         
@@ -92,7 +78,6 @@ class VistaClientes(CTkFrame):
     # --- FUNCIONES DE LECTURA Y SELECCIÓN ---
 
     def cargar_datos_cliente(self):
-        # Llama a la API para obtener y actualizar la tabla con los clientes.
         datos = api_client.obtener_clientes()
         if datos is None:
               tk_messagebox.showerror("Error de Conexión", "No se pudieron obtener los clientes. Verifique el servidor REST.")
@@ -101,7 +86,6 @@ class VistaClientes(CTkFrame):
               self.tabla_datos.actualizar_datos(datos)
 
     def al_seleccionar_fila(self, id_cliente):
-        # Guarda el ID y el valor de la fila seleccionada.
         self.valor_celda_seleccionada = id_cliente
         try:
             self.id_seleccionado = int(id_cliente)
@@ -109,7 +93,6 @@ class VistaClientes(CTkFrame):
             self.id_seleccionado = None
     
     def _mostrar_detalles_cliente(self, cliente_data):
-        # Muestra los detalles completos de un cliente
         DetailView(self.master, f"Detalles de Cliente: {cliente_data.get('nombre', 'N/A')}", 
                   cliente_data)
         
@@ -120,7 +103,6 @@ class VistaClientes(CTkFrame):
             
 
     def _get_cliente_fields(self):
-        # Define la configuración de los campos para el ModalForm.
         return [
             {'label': 'Nombre:', 'validator': validar_nombre_y_apellidos, 'key': 'nombre'},
             {'label': 'Apellidos:', 'validator': validar_nombre_y_apellidos, 'key': 'apellidos'},
@@ -130,23 +112,20 @@ class VistaClientes(CTkFrame):
             {'label': 'Dirección:', 'validator': validar_direccion, 'key': 'direccion'},
         ]
         
-    #   FUNCIONES CRUD (por funcionalidad) ---
+    #   FUNCIONES CRUD  ---
 
     def _abrir_modal_crear_cliente(self):
-        # Abre el modal para crear un cliente nuevo.
         ModalForm(self.master,
                   title="Crear Nuevo Cliente",
                   fields_config=self._get_cliente_fields(),
                   action_callback=self._crear_cliente_y_guardar)
 
     def _abrir_modal_editar_cliente(self):
-        # Abre el modal de edición, busca el cliente por ID (o nombre como parche).
         if self.id_seleccionado is None and not self.valor_celda_seleccionada:
             tk_messagebox.showwarning("Advertencia", "Selecciona un cliente de la tabla para editar.")
             return
 
         try:
-            # Lógica de búsqueda simplificada
             datos_api_lista = api_client.obtener_clientes()
             datos_actuales = None
             id_buscado = self.id_seleccionado
@@ -159,7 +138,6 @@ class VistaClientes(CTkFrame):
                             break
                 
                 if datos_actuales is None and self.valor_celda_seleccionada:
-                    # Búsqueda por nombre (por si falla el ID)
                     nombre_o_texto_buscado = self.valor_celda_seleccionada
                     for cliente in datos_api_lista:
                         if cliente.get('nombre') == nombre_o_texto_buscado:
@@ -189,16 +167,12 @@ class VistaClientes(CTkFrame):
 
 
     def _crear_cliente_y_guardar(self, data):
-        # POST /api/clientes. Añade campos obligatorios (auth/FK) antes de enviar.
         try:
-            # 1. Autenticación (Obligatorios para la API)
             data['username'] = data['email']
             data['passwordHash'] = "password123"
 
-            # 2. Clave Foránea Comercial (Asignación por defecto)
             data['comercial'] = { "comercialId": 1 }
             
-            # 3. Limpieza (evitar enviar IDs innecesarios)
             if 'comercial_id' in data:
                 del data['comercial_id']
 
@@ -217,14 +191,12 @@ class VistaClientes(CTkFrame):
             return False
 
     def _actualizar_cliente_y_guardar(self, data):
-        # PUT /api/clientes/{id}. Reenvía campos obligatorios (auth/FK) con los datos previos.
         if not self.cliente_en_edicion:
               tk_messagebox.showerror("Error", "Error interno: El cliente no fue cargado para edición.")
               return False
         try:
             cliente_previo = self.cliente_en_edicion
             
-            # 1. Crear diccionario final con datos editables
             data_final = {
                 'nombre': data.get('nombre'),
                 'apellidos': data.get('apellidos'),
@@ -234,8 +206,6 @@ class VistaClientes(CTkFrame):
                 'direccion': data.get('direccion'), 
             }
             
-            # 2. Reenviar campos NOT NULL (auth/FKs). ESTA ES LA CORRECCIÓN CRÍTICA.
-            # Forzamos un valor por defecto si el servidor falló al cargarlo (si es None)
             data_final['username'] = cliente_previo.get('username') or data.get('email')
             data_final['passwordHash'] = cliente_previo.get('password_hash') or "password123" 
             
@@ -244,11 +214,9 @@ class VistaClientes(CTkFrame):
                 data_final['comercial'] = {
                     "comercialId": comercial_data.get('comercial_id')
                 }
-            # Si el cliente previo NO tenía la FK completa, la asignamos por defecto
             elif not data_final.get('comercial'):
                   data_final['comercial'] = { "comercialId": 1 }
             
-            # Incluye el ID para la actualización en Java/JPA
             if cliente_previo.get('cliente_id') is not None:
                 data_final['clienteId'] = cliente_previo.get('cliente_id')
                 
@@ -265,7 +233,6 @@ class VistaClientes(CTkFrame):
             return False
             
     def _confirmar_y_eliminar(self):
-        # Pide confirmación y llama a la API para eliminar el cliente seleccionado.
         if self.id_seleccionado is None:
             tk_messagebox.showwarning("Advertencia", "Selecciona un cliente para eliminar.")
             return

@@ -4,12 +4,10 @@ import re
 from typing import Optional, Dict, Any
 from api import api_client
 
-# Importa componentes de tabla y modal
 from components.data_table import DataTable
 from components.modal_form import ModalForm
 from components.detail_view import DetailView 
 
-# --- FUNCIONES DE VALIDACIÓN ESPECÍFICA DE PRODUCTOS ---
 def validar_nombre_producto(valor):
     if not valor: return "El nombre es obligatorio.", False
     if len(valor) < 3: return "Mínimo 3 caracteres.", False
@@ -41,12 +39,8 @@ def validar_seccion_id(valor):
     except ValueError:
         return "Debe ser un número entero.", False
 
-# ====================================================================
-# --- VISTA COMPLETA CON CRUD DE PRODUCTOS ---
-# ====================================================================
 
 class VistaProductos(CTkFrame):
-    # Frame que contiene la tabla de productos y los controles CRUD.
     
     def __init__(self, maestro, **kwargs):
         super().__init__(maestro, **kwargs)
@@ -55,7 +49,6 @@ class VistaProductos(CTkFrame):
         
         self.id_seleccionado: Optional[int] = None 
         self.producto_en_edicion: Optional[Dict[str, Any]] = None
-        # Mapeo para combobox de secciones (display_name -> seccion_id)
         self.secciones_map = {}
 
         self._inicializar_controles()
@@ -66,20 +59,16 @@ class VistaProductos(CTkFrame):
         self.marco_control = CTkFrame(self, fg_color="transparent")
         self.marco_control.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="new")
 
-        # Botones CRUD (Nuevo y Recargar)
         CTkButton(self.marco_control, text="Nuevo (C)", command=self._abrir_modal_crear_producto).pack(side="right", padx=5)
         CTkButton(self.marco_control, text="Recargar", command=self.cargar_datos_producto).pack(side="right", padx=5)
 
-        # Inicialización de la Tabla de Datos
-        # Columnas de la BD: producto_id, nombre, descripcion, precio_base, plazas_disponibles, seccion_id
-        # Omitimos 'descripcion' porque es un campo TEXT largo
+
         columnas_producto = ["producto_id", "nombre", "precio_base", "plazas_disponibles", "seccion_id"] 
         self.tabla_datos = DataTable(self, columnas=columnas_producto, 
                                      al_seleccionar_item=self.al_seleccionar_fila,
                                      al_doble_clic=self._mostrar_detalles_producto)
         self.tabla_datos.grid(row=1, column=0, padx=10, pady=5, sticky="nsew")
         
-        # Marco de Acciones inferiores (Editar/Eliminar)
         self.marco_accion = CTkFrame(self, fg_color="transparent")
         self.marco_accion.grid(row=2, column=0, padx=10, pady=5, sticky="se")
         
@@ -87,7 +76,6 @@ class VistaProductos(CTkFrame):
         CTkButton(self.marco_accion, text="Eliminar (D)", fg_color="red", 
                  hover_color="#AA0000", command=self._confirmar_y_eliminar).pack(side="right", padx=5)
         
-    # --- FUNCIONES DE LECTURA Y SELECCIÓN ---
 
     def cargar_datos_producto(self):
         datos = api_client.obtener_productos()
@@ -104,18 +92,16 @@ class VistaProductos(CTkFrame):
             self.id_seleccionado = None
     
     def _mostrar_detalles_producto(self, producto_data):
-        # Muestra los detalles completos de un producto
         DetailView(self.master, f"Detalles de Producto: {producto_data.get('nombre', 'N/A')}", 
                   producto_data)
 
     def _obtener_secciones_para_modal(self) -> list:
-        """Carga secciones de la API y crea opciones para el combobox."""
         secciones = api_client.obtener_secciones()
         if not secciones:
             return ["No hay secciones disponibles"]
         
         opciones = []
-        self.secciones_map = {}  # Mapeo: display_name -> seccion_id
+        self.secciones_map = {}  
         
         for s in secciones:
             seccion_id = s.get('seccion_id')
@@ -129,22 +115,18 @@ class VistaProductos(CTkFrame):
         return opciones
     
     def _get_producto_fields(self):
-        # La descripción (TEXT) se podría añadir aquí, pero la omitimos por simplicidad de la interfaz
         opciones_secciones = self._obtener_secciones_para_modal()
         
         return [
             {'label': 'Nombre:', 'validator': validar_nombre_producto, 'key': 'nombre'},
             {'label': 'Precio Base:', 'validator': validar_precio_base, 'key': 'precio_base'},
             {'label': 'Plazas Disp.:', 'validator': validar_plazas, 'key': 'plazas_disponibles'},
-            # Sección como combobox
             {
                 'label': 'Sección:',
                 'options': opciones_secciones,
                 'key': 'seccion_display_name'
             },
         ]
-        
-    # --- FUNCIONES CRUD ---
 
     def _abrir_modal_crear_producto(self):
         ModalForm(self.master,
@@ -165,13 +147,10 @@ class VistaProductos(CTkFrame):
             
             self.producto_en_edicion = datos_actuales
             
-            # Preparar datos iniciales: convertir seccion_id a display_name para el combobox
             initial_data = datos_actuales.copy()
             
-            # Cargar opciones para el mapeo
             self._obtener_secciones_para_modal()
             
-            # Convertir seccion_id a display_name
             seccion_id = datos_actuales.get('seccion_id') or (datos_actuales.get('seccion', {}).get('seccion_id') if isinstance(datos_actuales.get('seccion'), dict) else None)
             if seccion_id:
                 for display_name, sid in self.secciones_map.items():
@@ -190,14 +169,11 @@ class VistaProductos(CTkFrame):
 
 
     def _crear_producto_y_guardar(self, data):
-        # POST /api/productos. Añade la descripción por defecto y formatea FK/precios.
         try:
-            # Formateo de datos
             data['precio_base'] = float(data['precio_base'])
             data['plazas_disponibles'] = int(data['plazas_disponibles'])
             data['descripcion'] = "Descripción por defecto." 
             
-            # Extraer ID de sección desde el combobox (display_name -> ID)
             if 'seccion_display_name' in data and data['seccion_display_name']:
                 seccion_display = data['seccion_display_name']
                 seccion_id = self.secciones_map.get(seccion_display)
@@ -225,29 +201,24 @@ class VistaProductos(CTkFrame):
             return False
 
     def _actualizar_producto_y_guardar(self, data):
-        # PUT /api/productos/{id}. Reenvía campos obligatorios (como descripcion) con los datos previos.
         if not self.producto_en_edicion:
             tk_messagebox.showerror("Error", "Error interno: El producto no fue cargado para edición.")
             return False
         try:
             producto_previo = self.producto_en_edicion
             
-            # Cargar mapeo si no está cargado
             if not hasattr(self, 'secciones_map') or not self.secciones_map:
                 self._obtener_secciones_para_modal()
             
-            # 1. Crear diccionario final con datos editables y formateados
             data_final = {
                 'nombre': data.get('nombre'),
                 'precio_base': float(data.get('precio_base')),
                 'plazas_disponibles': int(data.get('plazas_disponibles')),
             }
             
-            # 2. Reenviar campos NOT NULL y FKs (ID, descripcion, seccion_id)
             data_final['productoId'] = producto_previo.get('producto_id')
             data_final['descripcion'] = producto_previo.get('descripcion') or "Descripción por defecto."
             
-            # Extraer ID de sección desde el combobox (display_name -> ID)
             if 'seccion_display_name' in data and data['seccion_display_name']:
                 seccion_display = data['seccion_display_name']
                 seccion_id = self.secciones_map.get(seccion_display)
@@ -257,7 +228,6 @@ class VistaProductos(CTkFrame):
                     tk_messagebox.showerror("Error", "Sección no válida seleccionada.")
                     return False
             else:
-                # Mantener la sección existente si no se modifica
                 seccion_id = producto_previo.get('seccion_id') or (producto_previo.get('seccion', {}).get('seccion_id') if isinstance(producto_previo.get('seccion'), dict) else None)
                 if seccion_id:
                     if isinstance(seccion_id, dict):

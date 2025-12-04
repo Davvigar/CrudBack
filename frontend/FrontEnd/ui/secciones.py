@@ -4,24 +4,16 @@ import re
 from typing import Optional, Dict, Any
 from api import api_client
 
-# Importa componentes de tabla y modal
 from components.data_table import DataTable
 from components.modal_form import ModalForm
 from components.detail_view import DetailView 
 
-# --- FUNCIONES DE VALIDACIÓN ---
 def validar_nombre_seccion(valor):
     if not valor: return "El nombre de la sección es obligatorio.", False
     if len(valor) < 3: return "Mínimo 3 caracteres.", False
     return "✅", True
 
-
-# ====================================================================
-# --- VISTA COMPLETA CON CRUD DE SECCIONES ---
-# ====================================================================
-
 class VistaSecciones(CTkFrame):
-    # Frame que contiene la tabla de secciones y los controles CRUD.
     
     def __init__(self, maestro, **kwargs):
         super().__init__(maestro, **kwargs)
@@ -35,23 +27,19 @@ class VistaSecciones(CTkFrame):
         self.cargar_datos_seccion()
         
     def _inicializar_controles(self):
-        # Define el layout, input de búsqueda y botones.
         
         self.marco_control = CTkFrame(self, fg_color="transparent")
         self.marco_control.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="new")
 
-        # Botones CRUD (Nuevo y Recargar)
         CTkButton(self.marco_control, text="Nuevo (C)", command=self._abrir_modal_crear_seccion).pack(side="right", padx=5)
         CTkButton(self.marco_control, text="Recargar", command=self.cargar_datos_seccion).pack(side="right", padx=5)
 
-        # Inicialización de la Tabla de Datos
-        columnas_seccion = ["seccion_id", "nombre"] # Solo ID y Nombre
+        columnas_seccion = ["seccion_id", "nombre"] 
         self.tabla_datos = DataTable(self, columnas=columnas_seccion, 
                                      al_seleccionar_item=self.al_seleccionar_fila,
                                      al_doble_clic=self._mostrar_detalles_seccion)
         self.tabla_datos.grid(row=1, column=0, padx=10, pady=5, sticky="nsew")
         
-        # Marco de Acciones inferiores (Editar/Eliminar)
         self.marco_accion = CTkFrame(self, fg_color="transparent")
         self.marco_accion.grid(row=2, column=0, padx=10, pady=5, sticky="se")
         
@@ -59,7 +47,6 @@ class VistaSecciones(CTkFrame):
         CTkButton(self.marco_accion, text="Eliminar (D)", fg_color="red", 
                  hover_color="#AA0000", command=self._confirmar_y_eliminar).pack(side="right", padx=5)
         
-    # --- FUNCIONES DE LECTURA Y SELECCIÓN ---
 
     def cargar_datos_seccion(self):
         datos = api_client.obtener_secciones()
@@ -77,17 +64,14 @@ class VistaSecciones(CTkFrame):
             
     
     def _mostrar_detalles_seccion(self, seccion_data):
-        # Muestra los detalles completos de una sección
         DetailView(self.master, f"Detalles de Sección: {seccion_data.get('nombre', 'N/A')}", 
                   seccion_data)
 
     def _get_seccion_fields(self):
-        # Solo necesitamos el nombre
         return [
             {'label': 'Nombre de la Sección:', 'validator': validar_nombre_seccion, 'key': 'nombre'},
         ]
         
-    # --- FUNCIONES CRUD ---
 
     def _abrir_modal_crear_seccion(self):
         ModalForm(self.master,
@@ -120,7 +104,6 @@ class VistaSecciones(CTkFrame):
 
     def _crear_seccion_y_guardar(self, data):
         try:
-            # No se necesitan campos adicionales (username, password, FKs) para Secciones
             resultado = api_client.crear_seccion(data)
             
             if resultado is not None and resultado is not False:
@@ -146,7 +129,6 @@ class VistaSecciones(CTkFrame):
                 'nombre': data.get('nombre'),
             }
             
-            # Incluye el ID para la actualización en Java/JPA
             if seccion_previo.get('seccion_id') is not None:
                 data_final['seccionId'] = seccion_previo.get('seccion_id')
                 
