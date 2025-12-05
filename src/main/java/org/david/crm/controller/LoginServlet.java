@@ -1,5 +1,14 @@
 package org.david.crm.controller;
 
+import java.io.IOException;
+import java.util.Optional;
+
+import org.david.crm.model.Cliente;
+import org.david.crm.model.Comercial;
+import org.david.crm.service.ClienteService;
+import org.david.crm.service.ComercialService;
+import org.mindrot.jbcrypt.BCrypt;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
@@ -7,14 +16,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.david.crm.model.Comercial;
-import org.david.crm.model.Cliente;
-import org.david.crm.service.ComercialService;
-import org.david.crm.service.ClienteService;
-import org.mindrot.jbcrypt.BCrypt;
-
-import java.io.IOException;
-import java.util.Optional;
 
 @WebServlet("/api/login")
 @ApplicationScoped
@@ -42,7 +43,7 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
-        // Limpiar espacios en blanco
+        
         username = username.trim();
         password = password.trim();
 
@@ -53,7 +54,7 @@ public class LoginServlet extends HttpServlet {
                 Comercial comercial = comercialOpt.get();
                 String storedHash = comercial.getPasswordHash();
                 
-                // Verificar contraseña con BCrypt o comparación directa (para compatibilidad con datos antiguos)
+                // Verificar contraseña con BCrypt o comparación directa 
                 boolean passwordMatches = false;
                 if (storedHash != null) {
                     storedHash = storedHash.trim(); // Limpiar espacios del hash almacenado
@@ -61,8 +62,7 @@ public class LoginServlet extends HttpServlet {
                     if (storedHash.startsWith("$2a$") || storedHash.startsWith("$2b$")) {
                         passwordMatches = BCrypt.checkpw(password, storedHash);
                     } else {
-                        // Compatibilidad con contraseñas en texto plano (datos antiguos)
-                        // Comparación case-sensitive
+                       
                         passwordMatches = storedHash.equals(password);
                     }
                 }
@@ -74,22 +74,19 @@ public class LoginServlet extends HttpServlet {
                 }
             }
 
-            // Intentar con cliente
             Optional<Cliente> clienteOpt = clienteService.findByUsername(username);
             if (clienteOpt.isPresent()) {
                 Cliente cliente = clienteOpt.get();
                 String storedHash = cliente.getPasswordHash();
                 
-                // Verificar contraseña con BCrypt o comparación directa (para compatibilidad con datos antiguos)
+               
                 boolean passwordMatches = false;
                 if (storedHash != null) {
-                    storedHash = storedHash.trim(); // Limpiar espacios del hash almacenado
-                    // Si el hash empieza con $2a$ o $2b$, es un hash BCrypt
+                    storedHash = storedHash.trim(); 
                     if (storedHash.startsWith("$2a$") || storedHash.startsWith("$2b$")) {
                         passwordMatches = BCrypt.checkpw(password, storedHash);
                     } else {
-                        // Compatibilidad con contraseñas en texto plano (datos antiguos)
-                        // Comparación case-sensitive
+                       
                         passwordMatches = storedHash.equals(password);
                     }
                 }
@@ -106,7 +103,7 @@ public class LoginServlet extends HttpServlet {
             response.getWriter().write("INVALID");
 
         } catch (Exception e) {
-            // Manejo seguro de errores internos
+          
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("ERROR: Fallo interno en login. Detalle: " + e.getMessage());
         }

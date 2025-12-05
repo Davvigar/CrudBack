@@ -215,7 +215,9 @@ def exportar_estadisticas(nombre_archivo = None):
     return _manejar_peticion('POST', 'estadisticas', params=params) is True
 
 def resetear_estadisticas():
-    return _manejar_peticion('DELETE', f'estadisticas') is True
+    resultado = _manejar_peticion('DELETE', f'estadisticas')
+    # El servidor puede devolver True o un diccionario con el mensaje
+    return resultado is not None
 
 # Funciones de Dashboard 
 
