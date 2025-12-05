@@ -12,6 +12,7 @@ from api.api_client import (get_ingresos_mensuales, get_ranking_comerciales, get
                             get_clientes_por_comercial, get_productos_mas_vendidos, 
                             get_ingresos_por_seccion, obtener_estadisticas_api, arrancar_informe,
                             resetear_estadisticas)
+import api.api_client as api_client
 from customtkinter import CTkButton, CTkLabel
 import tkinter.messagebox as tk_messagebox
 import threading
@@ -142,16 +143,23 @@ class VistaDashboard(CTkFrame):
         )
         info_label.grid(row=1, column=0, sticky="nw", padx=15, pady=(0, 10))
         
-        # Botón para resetear estadísticas
-        reset_btn = CTkButton(stats_frame, 
-                              text="🔄 Resetear Estadísticas",
-                              command=lambda: self._on_resetear_estadisticas(info_label),
-                              fg_color="#CC0000", 
-                              hover_color="#AA0000",
-                              font=ctk.CTkFont(size=11))
-        reset_btn.grid(row=2, column=0, padx=15, pady=(0, 15), sticky="w")
+        # Botón para resetear estadísticas (solo para admin)
+        rol = api_client.GLOBAL_USER_INFO.get("rol", "usuario")
+        if rol == "pseudoadmin":
+            reset_btn = CTkButton(stats_frame, 
+                                  text="🔄 Resetear Estadísticas",
+                                  command=lambda: self._on_resetear_estadisticas(info_label),
+                                  fg_color="#CC0000", 
+                                  hover_color="#AA0000",
+                                  font=ctk.CTkFont(size=11))
+            reset_btn.grid(row=2, column=0, padx=15, pady=(0, 15), sticky="w")
     
     def _add_informes_section(self, parent_frame, row, col, span):
+        # Solo admin puede generar informes
+        rol = api_client.GLOBAL_USER_INFO.get("rol", "usuario")
+        if rol != "pseudoadmin":
+            return  # No mostrar la sección de informes para no-admin
+        
         informes_frame = ctk.CTkFrame(parent_frame, fg_color=CARD_COLOR, corner_radius=10,
                                      border_color=GRID_COLOR, border_width=1)
         informes_frame.grid(row=row, column=col, columnspan=span, sticky="nsew", padx=5, pady=5)

@@ -46,6 +46,14 @@ public class SeccionServlet extends BaseServlet {
     
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String userRole = (String) req.getAttribute("userRole");
+        
+        // Solo admin puede crear secciones
+        if (!"pseudoadmin".equals(userRole)) {
+            sendErrorResponse(resp, "Acceso denegado: solo administradores pueden crear secciones", HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+        
         try {
             String json = req.getReader().lines().reduce("", (acc, line) -> acc + line);
             Seccion seccion = JsonUtil.fromJson(json, Seccion.class);
@@ -59,6 +67,14 @@ public class SeccionServlet extends BaseServlet {
     
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String userRole = (String) req.getAttribute("userRole");
+        
+        // Solo admin puede actualizar secciones
+        if (!"pseudoadmin".equals(userRole)) {
+            sendErrorResponse(resp, "Acceso denegado: solo administradores pueden actualizar secciones", HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+        
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
             sendErrorResponse(resp, "ID requerido", HttpServletResponse.SC_BAD_REQUEST);
@@ -87,6 +103,14 @@ public class SeccionServlet extends BaseServlet {
     
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String userRole = (String) req.getAttribute("userRole");
+        
+        // Solo admin puede eliminar secciones
+        if (!"pseudoadmin".equals(userRole)) {
+            sendErrorResponse(resp, "Acceso denegado: solo administradores pueden eliminar secciones", HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+        
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
             sendErrorResponse(resp, "ID requerido", HttpServletResponse.SC_BAD_REQUEST);

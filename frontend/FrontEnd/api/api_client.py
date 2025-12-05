@@ -6,7 +6,7 @@ from typing import Any
 BASE_URL = "http://localhost:8080/api"
 
 GLOBAL_SESSION = requests.Session()
-GLOBAL_USER_INFO = {"logueado": False, "rol": None, "nombre": None}
+GLOBAL_USER_INFO = {"logueado": False, "rol": None, "nombre": None, "user_id": None}
 
 def _limpiar_total_factura(total_str):
     try:
@@ -95,13 +95,17 @@ def login_autenticacion(username, password):
         if response.status_code == 200:
             respuesta_texto = response.text
             if ',' in respuesta_texto:
-                rol, nombre = respuesta_texto.split(',', 1)
+                partes = respuesta_texto.split(',')
+                rol = partes[0]
+                nombre = partes[1].strip() if len(partes) > 1 else ""
+                user_id = partes[2].strip() if len(partes) > 2 else None
                 
                 GLOBAL_USER_INFO["logueado"] = True
                 GLOBAL_USER_INFO["rol"] = rol.lower()
-                GLOBAL_USER_INFO["nombre"] = nombre.strip()
+                GLOBAL_USER_INFO["nombre"] = nombre
+                GLOBAL_USER_INFO["user_id"] = int(user_id) if user_id and user_id.isdigit() else None
                 
-                return {"username": username, "nombre": nombre.strip(), "rol": rol.lower()}
+                return {"username": username, "nombre": nombre, "rol": rol.lower(), "user_id": GLOBAL_USER_INFO["user_id"]}
         
         return False
         

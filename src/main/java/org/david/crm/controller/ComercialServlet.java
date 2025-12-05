@@ -23,6 +23,14 @@ public class ComercialServlet extends BaseServlet {
     
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String userRole = (String) req.getAttribute("userRole");
+        
+        // Solo admin puede ver comerciales
+        if (!"pseudoadmin".equals(userRole)) {
+            sendErrorResponse(resp, "Acceso denegado: solo administradores pueden ver comerciales", HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+        
         String pathInfo = req.getPathInfo();
         
         if (pathInfo == null || pathInfo.equals("/")) {
@@ -46,6 +54,14 @@ public class ComercialServlet extends BaseServlet {
     
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String userRole = (String) req.getAttribute("userRole");
+        
+        // Solo admin puede crear comerciales
+        if (!"pseudoadmin".equals(userRole)) {
+            sendErrorResponse(resp, "Acceso denegado: solo administradores pueden crear comerciales", HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+        
         try {
             String json = req.getReader().lines().reduce("", (acc, line) -> acc + line);
             Comercial comercial = JsonUtil.fromJson(json, Comercial.class);
@@ -59,6 +75,14 @@ public class ComercialServlet extends BaseServlet {
     
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String userRole = (String) req.getAttribute("userRole");
+        
+        // Solo admin puede actualizar comerciales
+        if (!"pseudoadmin".equals(userRole)) {
+            sendErrorResponse(resp, "Acceso denegado: solo administradores pueden actualizar comerciales", HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+        
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
             sendErrorResponse(resp, "ID requerido", HttpServletResponse.SC_BAD_REQUEST);
@@ -87,6 +111,14 @@ public class ComercialServlet extends BaseServlet {
     
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String userRole = (String) req.getAttribute("userRole");
+        
+        // Solo admin puede eliminar comerciales
+        if (!"pseudoadmin".equals(userRole)) {
+            sendErrorResponse(resp, "Acceso denegado: solo administradores pueden eliminar comerciales", HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+        
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
             sendErrorResponse(resp, "ID requerido", HttpServletResponse.SC_BAD_REQUEST);

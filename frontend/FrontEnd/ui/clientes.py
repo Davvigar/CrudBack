@@ -59,7 +59,10 @@ class VistaClientes(CTkFrame):
         self.marco_control.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="new")
         self.marco_control.grid_columnconfigure(0, weight=1)
 
-        CTkButton(self.marco_control, text="Nuevo (C)", command=self._abrir_modal_crear_cliente).pack(side="right", padx=5)
+        # Admin y comerciales pueden crear clientes
+        rol = api_client.GLOBAL_USER_INFO.get("rol")
+        if rol == "pseudoadmin" or rol == "comercial":
+            CTkButton(self.marco_control, text="Nuevo (C)", command=self._abrir_modal_crear_cliente).pack(side="right", padx=5)
         CTkButton(self.marco_control, text="Recargar", command=self.cargar_datos_cliente).pack(side="right", padx=5)
 
         columnas_cliente = ["cliente_id", "nombre", "apellidos", "edad", "email", "telefono", "direccion", "comercial_id"]
@@ -71,9 +74,15 @@ class VistaClientes(CTkFrame):
         self.marco_accion = CTkFrame(self, fg_color="transparent")
         self.marco_accion.grid(row=2, column=0, padx=10, pady=5, sticky="se")
         
-        CTkButton(self.marco_accion, text="Editar (U)", command=self._abrir_modal_editar_cliente).pack(side="right", padx=5)
-        CTkButton(self.marco_accion, text="Eliminar (D)", fg_color="red", 
-                 hover_color="#AA0000", command=self._confirmar_y_eliminar).pack(side="right", padx=5)
+        # Admin y comerciales pueden editar clientes
+        rol = api_client.GLOBAL_USER_INFO.get("rol")
+        if rol == "pseudoadmin" or rol == "comercial":
+            CTkButton(self.marco_accion, text="Editar (U)", command=self._abrir_modal_editar_cliente).pack(side="right", padx=5)
+        
+        # Solo admin puede eliminar clientes
+        if rol == "pseudoadmin":
+            CTkButton(self.marco_accion, text="Eliminar (D)", fg_color="red", 
+                     hover_color="#AA0000", command=self._confirmar_y_eliminar).pack(side="right", padx=5)
         
     # --- FUNCIONES DE LECTURA Y SELECCIÓN ---
 

@@ -15,16 +15,7 @@ mysql -u root -p < database_setup.sql
 Verifica credenciales en `src/main/resources/META-INF/persistence.xml` (`jakarta.persistence.jdbc.user/password`).
 
 ## 2) Backend
-```bash
-mvn clean package
-```
-Desplegar el WAR:
-```bash
-cp target/crm-backend-1.0-SNAPSHOT.war $CATALINA_HOME/webapps/crm.war
-$CATALINA_HOME/bin/startup.sh   # startup.bat en Windows
-```
-API: `http://localhost:8080/crm/api/`
-
+configurar war exploded en intelij 
 ## 3) Frontend (escritorio)
 ```bash
 cd frontend/FrontEnd
@@ -35,6 +26,6 @@ Consume la API en `http://localhost:8080/crm/api/`. Si cambias host/puerto, ajus
 
 ## Notas rápidas
 - Arranca MySQL antes del backend.
-- Para redeploy: `mvn clean package` y copia del WAR de nuevo.
-- Si usas otro contenedor EE10, despliega el WAR según su CLI/console.
+
+
 

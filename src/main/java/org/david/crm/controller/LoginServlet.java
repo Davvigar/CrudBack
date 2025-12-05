@@ -16,6 +16,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 @WebServlet("/api/login")
 @ApplicationScoped
@@ -68,8 +69,15 @@ public class LoginServlet extends HttpServlet {
                 }
                 
                 if (passwordMatches) {
+                    // Crear sesión HTTP
+                    HttpSession session = request.getSession(true);
+                    session.setAttribute("userId", comercial.getComercialId());
+                    session.setAttribute("userRole", comercial.getRol().toString());
+                    session.setAttribute("userType", "comercial");
+                    session.setAttribute("userName", comercial.getNombre());
+                    
                     response.setStatus(HttpServletResponse.SC_OK);
-                    response.getWriter().write(comercial.getRol() + "," + comercial.getNombre());
+                    response.getWriter().write(comercial.getRol() + "," + comercial.getNombre() + "," + comercial.getComercialId());
                     return;
                 }
             }
@@ -92,8 +100,15 @@ public class LoginServlet extends HttpServlet {
                 }
                 
                 if (passwordMatches) {
+                    // Crear sesión HTTP para cliente
+                    HttpSession session = request.getSession(true);
+                    session.setAttribute("userId", cliente.getClienteId());
+                    session.setAttribute("userRole", "cliente");
+                    session.setAttribute("userType", "cliente");
+                    session.setAttribute("userName", cliente.getNombre());
+                    
                     response.setStatus(HttpServletResponse.SC_OK);
-                    response.getWriter().write("cliente," + cliente.getNombre());
+                    response.getWriter().write("cliente," + cliente.getNombre() + "," + cliente.getClienteId());
                     return;
                 }
             }
