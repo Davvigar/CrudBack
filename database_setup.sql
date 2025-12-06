@@ -104,7 +104,7 @@ INSERT INTO secciones (nombre) VALUES
 
 -- Insertar comerciales
 INSERT INTO comerciales (username, password_hash, nombre, email, telefono, rol, version) VALUES
-('admin', '$2a$10$EjemploHashSeguro123456789', 'Administrador Principal', 'admin@crm.com', '600111222', 'pseudoadmin', 0),
+('admin', '123456', 'Dani Jaén', 'admin@crm.com', '600111222', 'pseudoadmin', 0),
 ('comercial1', '$2a$10$EjemploHashSeguro123456789', 'Juan Pérez', 'juan.perez@crm.com', '600222333', 'comercial', 0),
 ('comercial2', '$2a$10$EjemploHashSeguro123456789', 'María García', 'maria.garcia@crm.com', '600333444', 'comercial', 0),
 ('comercial3', '$2a$10$EjemploHashSeguro123456789', 'Carlos López', 'carlos.lopez@crm.com', '600444555', 'comercial', 0),
@@ -112,7 +112,7 @@ INSERT INTO comerciales (username, password_hash, nombre, email, telefono, rol, 
 
 -- Insertar clientes (Estudiantes potenciales)
 INSERT INTO clientes (username, password_hash, nombre, apellidos, edad, email, telefono, direccion, comercial_id, version) VALUES
-('cliente1', '$2a$10$EjemploHashSeguro123456789', 'Pedro', 'Sánchez', 19, 'pedro.sanchez@email.com', '611111111', 'Calle Mayor 1, Madrid', 2, 0),
+('chumete', '123456', 'chumete', 'kotlin', 19, 'pedro.sanchez@email.com', '611111111', 'Calle Mayor 1, Madrid', 2, 0),
 ('cliente2', '$2a$10$EjemploHashSeguro123456789', 'Laura', 'Rodríguez', 20, 'laura.rodriguez@email.com', '622222222', 'Avenida Principal 15, Barcelona', 2, 0),
 ('cliente3', '$2a$10$EjemploHashSeguro123456789', 'Miguel', 'Fernández', 22, 'miguel.fernandez@email.com', '633333333', 'Plaza del Sol 8, Valencia', 3, 0),
 ('cliente4', '$2a$10$EjemploHashSeguro123456789', 'Isabel', 'Torres', 21, 'isabel.torres@email.com', '644444444', 'Calle Nueva 22, Sevilla', 3, 0),
